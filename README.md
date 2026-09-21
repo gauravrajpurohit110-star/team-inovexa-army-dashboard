@@ -1,14 +1,14 @@
-# Indian Army Tactical Vehicle Terminal 🇮🇳
+# Team Inovexa Army Dashboard 🇮🇳
 ### MIL-STD-810H & STANAG Level II Battle Management System (BMS) Dashboard
 
-[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-Online-00e676?style=for-the-badge&logo=googlechrome&logoColor=white)](https://gauravrajpurohit110-star.github.io/indian-army-tactical-terminal/)
+[![Live Dashboard](https://img.shields.io/badge/Live_Dashboard-Online-00e676?style=for-the-badge&logo=googlechrome&logoColor=white)](https://gauravrajpurohit110-star.github.io/team-inovexa-army-dashboard/)
 [![Military Spec](https://img.shields.io/badge/Spec-MIL--STD--810H-06b6d4?style=for-the-badge)](https://en.wikipedia.org/wiki/MIL-STD-810)
 [![Armor Grade](https://img.shields.io/badge/Armor-STANAG_Level_II-f59e0b?style=for-the-badge)](https://en.wikipedia.org/wiki/STANAG_4569)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 An offline-first, browser-based, high-definition Tactical Battle Management System (BMS) and Autonomous Sensor Fusion Cockpit for Indian Army Armoured Patrol Vehicles and Light Specialist Vehicles (ALSV).
 
-🌐 **Live Deployment**: [https://gauravrajpurohit110-star.github.io/indian-army-tactical-terminal/](https://gauravrajpurohit110-star.github.io/indian-army-tactical-terminal/)
+🌐 **Live Deployment**: [https://gauravrajpurohit110-star.github.io/team-inovexa-army-dashboard/](https://gauravrajpurohit110-star.github.io/team-inovexa-army-dashboard/)
 
 ---
 
@@ -78,10 +78,10 @@ Holding the physical **Spacebar for 2.0 seconds** shifts the entire terminal fra
 ### Run Locally:
 ```bash
 # 1. Clone repository
-git clone https://github.com/gauravrajpurohit110-star/indian-army-tactical-terminal.git
+git clone https://github.com/gauravrajpurohit110-star/team-inovexa-army-dashboard.git
 
 # 2. Enter folder
-cd indian-army-tactical-terminal
+cd team-inovexa-army-dashboard
 
 # 3. Open in browser (Chrome / Edge / Firefox)
 start chrome indian_army_tactical_vehicle_terminal.html
