@@ -42,7 +42,6 @@ function switchTab(tabId) {
   const previewVideo = document.getElementById('mission-preview-video');
   if (tabId === 'home') {
     if (window.resume3dLoop) window.resume3dLoop();
-    if (window.stopRadarLoop) window.stopRadarLoop();
     if (window.stopFlirLoop) window.stopFlirLoop();
     if (previewVideo && !previewVideo.paused) previewVideo.pause();
   } else if (tabId === 'map') {
@@ -54,15 +53,12 @@ function switchTab(tabId) {
     if (previewVideo) {
       previewVideo.play().then(() => updatePreviewPlayUI(true)).catch(() => updatePreviewPlayUI(false));
     }
-    if (window.stopRadarLoop) window.stopRadarLoop();
     if (window.stopFlirLoop) window.stopFlirLoop();
   } else if (tabId === 'camera') {
     if (window.resizeFlirCanvas) window.resizeFlirCanvas();
     if (window.startFlirLoop) window.startFlirLoop();
-    if (window.stopRadarLoop) window.stopRadarLoop();
     if (previewVideo && !previewVideo.paused) previewVideo.pause();
   } else {
-    if (window.stopRadarLoop) window.stopRadarLoop();
     if (window.stopFlirLoop) window.stopFlirLoop();
     if (previewVideo && !previewVideo.paused) previewVideo.pause();
   }
@@ -277,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Window Resize Listeners
   window.addEventListener('resize', () => {
     if (window.resize3dCanvas) window.resize3dCanvas();
-    if (window.resizeRadarCanvas) window.resizeRadarCanvas();
+    if (window.invalidateMapSize) window.invalidateMapSize();
     if (window.resizeFlirCanvas) window.resizeFlirCanvas();
   });
 

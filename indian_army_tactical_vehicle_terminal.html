@@ -991,10 +991,10 @@
             <!-- Sensor Viewport Stage (NO VIDEO BAR - 100% CLEAN HUD VIEWPORT) -->
             <div class="relative flex-1 bg-black overflow-hidden flex items-center justify-center select-none" id="camera-feed-box">
               <!-- Video 1: Optical Camera (EO Natural Driving View) -->
-              <video id="optic-video-camera" src="gemini_generated_video_0d19fe96.mp4" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-150" loop muted playsinline preload="auto"></video>
+              <video id="optic-video-camera" src="gemini_generated_video_0d19fe96.mp4" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-150" autoplay loop muted playsinline preload="auto"></video>
 
               <!-- Video 2: 3D Adaptive LiDAR View (Point Cloud / Scanlines) -->
-              <video id="optic-video-lidar" src="gemini_generated_video_0d19fe96_20260920233844.mp4" class="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none transition-opacity duration-150" loop muted playsinline preload="auto"></video>
+              <video id="optic-video-lidar" src="gemini_generated_video_0d19fe96_20260920233844.mp4" class="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none transition-opacity duration-150" autoplay loop muted playsinline preload="auto"></video>
 
               <!-- Picture-in-Picture Inset Box (Active only in PiP mode) -->
               <div id="optic-pip-box" class="hidden absolute bottom-4 right-4 w-72 h-44 rounded-lg overflow-hidden border-2 border-emerald-400/80 shadow-2xl z-30 bg-black cursor-pointer" onclick="swapPipChannel()" title="Click to swap feeds">
@@ -1640,6 +1640,8 @@
       </div>
     </div>
 
+  </div>
+  <!-- /#rugged-frame -->
   </div>
   <!-- /#frame-viewport-stage -->
 

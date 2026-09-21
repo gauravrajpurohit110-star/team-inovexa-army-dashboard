@@ -117,6 +117,11 @@ async function init3dVehicleLazy() {
 }
 
 function bindVehicleControls(canvas, wrapper) {
+  canvas.addEventListener('dblclick', (e) => {
+    e.stopPropagation();
+    expand3dVehicleModal();
+  });
+
   canvas.addEventListener('mousedown', (e) => {
     isMouseDown = true;
     mousePrevX = e.clientX;
@@ -497,7 +502,7 @@ function close3dVehicleModal() {
   modal.classList.add('hidden');
 
   // Reparent canvas back to Card 1 in normal dashboard
-  normalWrapper.appendChild(canvas);
+  normalWrapper.insertBefore(canvas, normalWrapper.firstChild);
   canvas.style.width = '100%';
   canvas.style.height = '100%';
 

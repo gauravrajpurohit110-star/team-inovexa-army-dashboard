@@ -15,6 +15,7 @@ let breadcrumbTrail = null;
 let breadcrumbPoints = [];
 let currentMapMode = '2d'; // '2d' or '3d'
 let activeLayerKey = 'satellite';
+let navigationOrientation = 'track-up'; // 'track-up' or 'north-up'
 let isDrivingActive = false; // Stopped by default (manual start/drive)
 let driveInterval = null;
 
@@ -491,10 +492,17 @@ function startDrivingSimulation() {
     // Auto-pan map smoothly to follow vehicle
     tacticalMap.panTo([currentLat, currentLon], { animate: false });
 
-    // Rotate arrow towards travel direction (heading)
+    // Rotate arrow towards travel direction or point up in track-up mode
     const arrowDom = document.getElementById('vehicle-arrow-direction');
     if (arrowDom) {
-      arrowDom.style.transform = `rotate(${Math.round(currentHeading)}deg)`;
+      if (navigationOrientation === 'track-up') {
+        arrowDom.style.transform = 'rotate(0deg)';
+      } else {
+        arrowDom.style.transform = `rotate(${Math.round(currentHeading)}deg)`;
+      }
+    }
+    if (navigationOrientation === 'track-up') {
+      applyCameraTransform();
     }
 
     // Update Speed badge on arrow
@@ -511,7 +519,7 @@ function startDrivingSimulation() {
 
 /**
  * Applies 2D vs 3D transforms to #tactical-map-viewport
- * NOTE: Viewport stays 100% upright in 2D (NO diagonal container rotation!)
+ * Supports Track-Up (vehicle direction straight forward) & North-Up (True North grid)
  */
 function applyCameraTransform() {
   const viewport = document.getElementById('tactical-map-viewport');
@@ -523,12 +531,22 @@ function applyCameraTransform() {
     stage.classList.toggle('satellite-active', activeLayerKey === 'satellite' || activeLayerKey === 'hybrid');
   }
 
+  const rotZ = navigationOrientation === 'track-up' ? -currentHeading : 0;
+
   if (currentMapMode === '3d') {
-    // 3D Perspective Chase View: Pure forward pitch (NO Z-axis diagonal skew!)
-    viewport.style.transform = 'rotateX(44deg) scale(1.18)';
+    // 3D Perspective Chase View: Forward pitch with dynamic heading rotation in track-up
+    if (navigationOrientation === 'track-up') {
+      viewport.style.transform = `rotateX(44deg) rotateZ(${rotZ.toFixed(1)}deg) scale(1.25)`;
+    } else {
+      viewport.style.transform = 'rotateX(44deg) scale(1.18)';
+    }
   } else {
-    // 2D Orthographic View: Perfectly upright, full-bleed
-    viewport.style.transform = 'none';
+    // 2D Orthographic View
+    if (navigationOrientation === 'track-up') {
+      viewport.style.transform = `rotateZ(${rotZ.toFixed(1)}deg) scale(1.35)`;
+    } else {
+      viewport.style.transform = 'none';
+    }
   }
 }
 
@@ -575,6 +593,45 @@ function toggleDrivingSimulation() {
     window.showToast('OFFROAD PATROL', isDrivingActive ? 'Vehicle patrol movement started.' : 'Vehicle movement stopped (Stationary).', 'info');
   }
   if (window.playBeep) window.playBeep(isDrivingActive ? 1000 : 700, 0.05);
+}
+
+/**
+ * Toggle Navigation Driving Orientation (Track-Up vs North-Up)
+ */
+function toggleNavigationOrientation() {
+  navigationOrientation = (navigationOrientation === 'track-up') ? 'north-up' : 'track-up';
+  const btn = document.getElementById('btn-nav-orientation');
+  if (btn) {
+    if (navigationOrientation === 'track-up') {
+      btn.innerHTML = '<i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-400"></i> TRACK-UP (DRIVE)';
+      btn.className = 'px-2.5 py-1 rounded bg-slate-900/90 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors';
+    } else {
+      btn.innerHTML = '<i data-lucide="compass" class="w-3.5 h-3.5 text-cyan-400"></i> NORTH-UP';
+      btn.className = 'px-2.5 py-1 rounded bg-slate-900/90 hover:bg-slate-800 text-cyan-300 border border-cyan-500/40 font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors';
+    }
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+  }
+
+  // Update vehicle arrow rotation immediately
+  const arrowDom = document.getElementById('vehicle-arrow-direction');
+  if (arrowDom) {
+    if (navigationOrientation === 'track-up') {
+      arrowDom.style.transform = 'rotate(0deg)';
+    } else {
+      arrowDom.style.transform = `rotate(${Math.round(currentHeading)}deg)`;
+    }
+  }
+
+  applyCameraTransform();
+
+  if (window.playBeep) window.playBeep(920, 0.04);
+  if (window.showToast) {
+    window.showToast(
+      'MAP ORIENTATION',
+      navigationOrientation === 'track-up' ? 'Track-Up: Forward-facing driving orientation' : 'North-Up: True North strategic grid orientation',
+      'info'
+    );
+  }
 }
 
 /**
@@ -726,3 +783,4 @@ window.zoomMap = zoomMap;
 window.showVehicleMapPopup = showVehicleMapPopup;
 window.invalidateMapSize = invalidateMapSize;
 window.toggleDrivingSimulation = toggleDrivingSimulation;
+window.toggleNavigationOrientation = toggleNavigationOrientation;

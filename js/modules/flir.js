@@ -365,6 +365,15 @@ window.adjustZoom = (delta) => {
   if (window.showToast) window.showToast('OPTICAL ZOOM', `Magnification: ${delta > 0 ? '+1x' : '-1x'}`);
 };
 
+// Ensure seamless start on first user interaction if autoplay policy delayed playback
+['click', 'touchstart', 'keydown'].forEach(evt => {
+  window.addEventListener(evt, () => {
+    if (window.currentTab === 'camera') {
+      playOpticVideos();
+    }
+  }, { once: true });
+});
+
 // Global exports
 window.setOpticChannel = setOpticChannel;
 window.setOpticPalette = setOpticPalette;
