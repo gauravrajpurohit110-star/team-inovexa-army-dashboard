@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indian Army Tactical Vehicle Terminal - BMS v4.8.2</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Rajdhani for Military Tactical UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Military Terminal Stylesheet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/tactical_terminal.css">
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-1 sm:p-3 md:p-6 bg-[#0a0d12]">
+<!-- Top Utilities Bar: Bezel Toggle, Audio Control, Fullscreen -->
+  <div class="w-full max-w-[1440px] flex items-center justify-between mb-2 px-3 text-xs text-slate-400">
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+      <span class="font-tactical font-semibold tracking-wider text-slate-300 uppercase">MIL-STD-810H RUGGED BATTLEFIELD TERMINAL</span>
+      <span class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 font-mono">BMS-v4.8.2</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- SPACEBAR 2-SEC HOLD SOS HINT BADGE -->
+      <div id="sos-key-pill" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-950/40 border border-red-500/40 text-red-300 font-mono text-[11px] relative overflow-hidden select-none">
+        <div id="sos-key-progress" class="absolute left-0 top-0 bottom-0 bg-red-600/30 w-0 transition-all duration-75"></div>
+        <kbd class="px-1.5 py-0.5 rounded bg-red-900/60 border border-red-500/60 text-red-200 text-[10px] font-bold">SPACE (2s)</kbd>
+        <span class="relative z-10 text-red-400 font-semibold tracking-wide flex items-center gap-1">
+          <i data-lucide="radio" class="w-3 h-3 text-red-400 animate-pulse"></i>
+          EMERGENCY SOS
+        </span>
+      </div>
+
+      <button id="toggle-audio-btn" onclick="toggleAudio()" class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+        <i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-400" id="audio-icon"></i>
+        <span id="audio-label" class="font-mono text-[11px]">BEEP: ON</span>
+      </button>
+      <button id="toggle-bezel-btn" onclick="toggleChassis()" class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+        <i data-lucide="monitor" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span id="bezel-mode-label" class="font-mono text-[11px]">CHASSIS: VISIBLE</span>
+      </button>
+      <button onclick="toggleFullScreen()" class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+        <i data-lucide="maximize" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span class="font-mono text-[11px]">FULLSCREEN</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- STAGE WRAPPER FOR FRAME SHIFT ANIMATION -->
+  <div id="frame-viewport-stage" class="w-full max-w-[1440px] flex flex-col items-center justify-center relative">
+
+    <!-- OVERHEAD ROOF CONSOLE: EMERGENCY SOS BUTTON (Revealed when frame shifts upside) -->
+    <div id="overhead-sos-console" class="w-full max-w-[1380px] h-[340px] bg-[#0c1015] border-4 border-[#252e3b] rounded-[24px] mb-3 shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden relative hidden flex-col items-center justify-between p-4 select-none">
+      
+      <!-- Top Roof Console Header Bar -->
+      <div class="w-full flex items-center justify-between px-3 py-1.5 bg-[#121820] border border-[#232f3e] rounded-xl shadow-inner text-xs font-mono">
+        <div class="flex items-center gap-2 text-red-400 font-bold">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500 animate-bounce"></i>
+          <span>OVERHEAD COCKPIT ROOF CONSOLE // SEC-9 EMERGENCY MODULE</span>
+        </div>
+        <div class="flex items-center gap-3 text-slate-400">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> DIRECT BEACON STANDBY</span>
+          <span class="px-2 py-0.5 rounded bg-black/60 border border-slate-700 text-slate-300">ACTUATION: SPRING MECHANICAL</span>
+        </div>
+      </div>
+
+      <!-- Center Console Housing: Hazard Hatches + The Big SOS Push Button -->
+      <div class="flex items-center justify-center gap-8 my-auto relative w-full">
+        
+        <!-- Left Warning Stenciling -->
+        <div class="hidden md:flex flex-col text-right font-mono text-[11px] text-amber-400 font-bold space-y-1">
+          <div>MIL-STD-1472G</div>
+          <div class="text-slate-400 font-normal">SATELLITE DISTRESS</div>
+          <div class="text-red-400">LOCKED FREQ: 406.025 MHz</div>
+          <div class="text-slate-500 text-[10px]">HOLD TO ENGAGE FULL SEQUENCE</div>
+        </div>
+
+        <!-- Central Armoured Switch Housing -->
+        <div class="relative flex items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-[#181e26] to-[#0d1217] border-4 border-[#333d4d] shadow-[0_15px_40px_rgba(0,0,0,0.95)]">
+          <!-- Hazard Stripe Border Trim -->
+          <div class="absolute inset-1.5 hazard-stripes opacity-20 rounded-xl pointer-events-none"></div>
+
+          <!-- Spring Loaded Guard Flap (Opened State) -->
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-t bg-amber-600 text-black font-extrabold text-[9px] font-mono tracking-wider border border-amber-400 shadow">
+            SAFETY COVER RAISED
+          </div>
+
+          <!-- The Physical Red Mushroom SOS Switch -->
+          <div class="relative z-10 flex flex-col items-center">
+            <button id="sos-physical-btn" class="sos-physical-switch w-36 h-36 rounded-full bg-gradient-to-b from-[#f87171] via-[#dc2626] to-[#991b1b] border-4 border-red-300 flex flex-col items-center justify-center text-white cursor-pointer select-none">
+              <i data-lucide="radio" class="w-9 h-9 mb-1 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"></i>
+              <span class="font-extrabold text-2xl tracking-widest font-tactical drop-shadow">SOS</span>
+              <span class="text-[9px] font-mono font-bold tracking-widest text-red-200">EMERGENCY</span>
+            </button>
+            <div class="mt-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider">PUSH TO BROADCAST DISTRESS</div>
+          </div>
+
+          <!-- SVG Soldier Hand with Glove that reaches up and pushes button -->
+          <div id="sos-operator-hand" class="absolute pointer-events-none z-30 transition-transform duration-75" style="bottom: -280px; left: 50%; transform: translateX(-50%) translateY(0px);">
+            <!-- High Quality Vector Tactical Arm & Glove Pressing -->
+            <svg width="180" height="260" viewBox="0 0 180 260" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-[0_20px_35px_rgba(0,0,0,0.9)]">
+              <!-- Forearm Sleeve (Indian Army O.D. Green Camo Sleeve) -->
+              <path d="M55,160 L125,160 L140,260 L40,260 Z" fill="#2d3b24" stroke="#1c2517" stroke-width="3"/>
+              <!-- Tactical Watch on Wrist -->
+              <rect x="52" y="150" width="76" height="14" rx="3" fill="#181e24" stroke="#374151" stroke-width="2"/>
+              <rect x="75" y="152" width="30" height="10" rx="2" fill="#0b1319"/>
+              <text x="80" y="160" fill="#00e676" font-size="7" font-family="monospace">14:32</text>
+              <!-- Glove Wrist Cuff -->
+              <path d="M50,140 L130,140 L126,152 L54,152 Z" fill="#111827" stroke="#374151" stroke-width="2"/>
+              <!-- Tactical Combat Glove Palm (Reinforced Black Kevlar) -->
+              <path d="M50,90 Q50,70 70,68 L110,68 Q130,70 130,90 L126,140 L54,140 Z" fill="#1f2937" stroke="#374151" stroke-width="3"/>
+              <!-- Glove Knuckle Armor Plate -->
+              <rect x="58" y="80" width="64" height="20" rx="6" fill="#111827" stroke="#4b5563" stroke-width="2"/>
+              <circle cx="68" cy="90" r="3.5" fill="#374151"/>
+              <circle cx="82" cy="90" r="3.5" fill="#374151"/>
+              <circle cx="98" cy="90" r="3.5" fill="#374151"/>
+              <circle cx="112" cy="90" r="3.5" fill="#374151"/>
+              <!-- Thumb pointing up/inward -->
+              <path d="M50,105 Q35,90 42,75 Q48,65 58,74 L62,95 Z" fill="#1f2937" stroke="#374151" stroke-width="2.5"/>
+              <path d="M42,75 Q45,68 52,73" stroke="#4b5563" stroke-width="2" stroke-linecap="round"/>
+              <!-- Extended Index & Middle Fingers Pressing Button -->
+              <path d="M72,70 L72,25 Q72,12 85,12 Q98,12 98,25 L98,70 Z" fill="#111827" stroke="#374151" stroke-width="3"/>
+              <path d="M98,70 L98,32 Q98,20 108,20 Q118,20 118,32 L118,72 Z" fill="#1f2937" stroke="#374151" stroke-width="2.5"/>
+              <!-- Fingertip Grip Pads -->
+              <ellipse cx="85" cy="20" rx="7" ry="9" fill="#374151"/>
+              <ellipse cx="108" cy="27" rx="5" ry="7" fill="#374151"/>
+              <!-- Pressed Feedback Touch Ring -->
+              <circle id="hand-touch-ring" cx="85" cy="12" r="14" fill="none" stroke="#ef4444" stroke-width="3" opacity="0" class="transition-opacity"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Right System Indicators -->
+        <div class="hidden md:flex flex-col text-left font-mono text-[11px] text-slate-300 font-semibold space-y-1">
+          <div class="text-cyan-400">BEACON: EPIRB / COSPAS</div>
+          <div>POWER: DUAL REDUNDANT BUS</div>
+          <div class="text-emerald-400">GPS EPHEMERIS: LOCKED</div>
+          <div class="text-slate-500 text-[10px]">TRANSMISSION BURST: 5.0 W</div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Status Strip in Overhead Console -->
+      <div class="w-full flex items-center justify-between px-4 py-1.5 bg-[#090d12] border-t border-[#1e2733] text-[11px] font-mono text-slate-400">
+        <span class="text-red-400 font-bold" id="sos-sequence-status">HOLD SPACEBAR FOR 2.0s TO ENGAGE // RELEASE TO CANCEL</span>
+        <span id="sos-sequence-countdown" class="text-yellow-400 font-mono font-bold">0.0s / 2.0s</span>
+      </div>
+
+    </div>
+
+    <!-- RUGGED TABLET CHASSIS CONTAINER -->
+    <div id="rugged-frame" class="w-full max-w-[1440px] rounded-[28px] chassis-surface p-3 sm:p-5 md:p-6 shadow-[0_25px_70px_rgba(0,0,0,0.95)] border-4 border-[#252e3b] relative transition-all duration-300">
+    
+    <!-- Heavy Rubberized Corner Shock Bumpers with Hex Screws -->
+    <div class="absolute top-2 left-2 hex-bolt"></div>
+    <div class="absolute top-2 right-2 hex-bolt"></div>
+    <div class="absolute bottom-2 left-2 hex-bolt"></div>
+    <div class="absolute bottom-2 right-2 hex-bolt"></div>
+    
+    <div class="absolute top-1/2 left-2 -translate-y-1/2 hidden md:flex flex-col gap-2">
+      <div class="hex-bolt"></div>
+      <div class="hex-bolt"></div>
+    </div>
+    <div class="absolute top-1/2 right-2 -translate-y-1/2 hidden md:flex flex-col gap-2">
+      <div class="hex-bolt"></div>
+      <div class="hex-bolt"></div>
+    </div>
+
+    <!-- Hardware Tablet Outer Frame Grid: Left Buttons | Screen Display | Right Buttons -->
+    <div class="flex flex-col md:flex-row items-stretch gap-2 sm:gap-3">
+
+      <!-- LEFT PHYSICAL HARDWARE BUTTONS (As seen on real military terminal) -->
+      <div id="left-physical-bar" class="hidden md:flex flex-col justify-center items-center gap-3 py-6 px-1.5 bg-[#10141a] rounded-xl border border-[#232b35] shadow-inner">
+        <!-- Physical Home Button -->
+        <button onclick="switchTab('home')" title="Terminal Home" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-400 active">
+          <i data-lucide="home" class="w-5 h-5 text-emerald-400"></i>
+        </button>
+        <!-- Physical GPS Waypoint -->
+        <button onclick="switchTab('waypoints')" title="Waypoints" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-cyan-400">
+          <i data-lucide="map-pin" class="w-5 h-5"></i>
+        </button>
+        <!-- Physical Vehicle Telemetry Button (Highlighted in image) -->
+        <button onclick="switchTab('home')" title="Vehicle Diagnostics" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center border border-emerald-500/50 bg-[#162320]">
+          <i data-lucide="car" class="w-5 h-5 text-emerald-400"></i>
+        </button>
+        <!-- Physical Comms Switch -->
+        <button onclick="playBeep(880, 0.08); showCommsQuickModal();" title="Radio Comms" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-400">
+          <i data-lucide="radio" class="w-5 h-5"></i>
+        </button>
+        <!-- Physical Hardware Settings -->
+        <button onclick="switchTab('settings')" title="Hardware Calibration" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-200">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- THE DIGITAL TACTICAL SCREEN BEZEL -->
+      <div class="flex-1 bg-[#07131b] rounded-xl border-2 border-[#122b3b] shadow-[inset_0_0_20px_rgba(0,0,0,0.9)] overflow-hidden relative crt-overlay flex flex-col">
+
+        <!-- TOP STATUS HEADER BAR (Indian Army Insignia, Clock, GNSS, Heading, Altitude, Weather) -->
+        <header class="bg-[#050f16] border-b border-[#122e42] px-3 py-2.5 sm:px-5 flex flex-wrap items-center justify-between gap-y-2 text-xs select-none">
+          
+          <!-- LEFT: Indian Army Crest & Service Before Self Motto -->
+          <div class="flex items-center gap-3">
+            <!-- Indian Army Insignia Emblem SVG -->
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded flex items-center justify-center p-0.5 bg-gradient-to-b from-[#1d2716] to-[#0d130a] border border-[#a18830]">
+                <!-- Emblem: Ashoka Lion Capital + Crossed Swords -->
+                <svg viewBox="0 0 100 100" class="w-8 h-8 drop-shadow-[0_0_3px_#eab308]">
+                  <!-- Crossed Sabres -->
+                  <path d="M18,82 L82,18 M22,86 L86,22" stroke="#d4af37" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M82,82 L18,18 M86,86 L22,22" stroke="#d4af37" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="50" cy="50" r="14" fill="#0b1a10" stroke="#f59e0b" stroke-width="2.5"/>
+                  <!-- Ashoka Chakra 24 spokes mini circle -->
+                  <circle cx="50" cy="50" r="4" fill="#f59e0b"/>
+                  <!-- Ashoka Lion Stylized Crest -->
+                  <path d="M42,26 Q50,14 58,26 Q62,35 50,37 Q38,35 42,26 Z" fill="#eab308"/>
+                  <path d="M45,38 L55,38 L57,48 L43,48 Z" fill="#ca8a04"/>
+                  <!-- Shield Base -->
+                  <path d="M36,65 L64,65 L50,78 Z" fill="#a16207"/>
+                </svg>
+              </div>
+              <div class="leading-tight">
+                <h1 class="font-extrabold text-white tracking-widest text-sm sm:text-base font-tactical">INDIAN ARMY</h1>
+                <p class="text-[10px] sm:text-[11px] font-semibold text-[#8fa7b8] tracking-wider uppercase font-tactical">SERVICE BEFORE SELF</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TIME & DATE -->
+          <div class="flex flex-col items-center justify-center px-3 border-x border-[#133349]">
+            <span id="digital-clock" class="text-base sm:text-lg font-bold font-mono text-white tracking-wider">14:32</span>
+            <span id="digital-date" class="text-[10px] font-medium text-[#7999ad] tracking-wide">22 Sep 2025</span>
+          </div>
+
+          <!-- GNSS SATELLITE STATUS -->
+          <div class="flex items-center gap-2 px-2">
+            <!-- Satellite SVG Icon -->
+            <svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a4 4 0 0 0-4 4c0 2 2 4 4 4s4-2 4-4a4 4 0 0 0-4-4z"/>
+              <path d="M4.93 4.93l4.24 4.24M19.07 4.93l-4.24 4.24M2 12h4M18 12h4M4.93 19.07l4.24-4.24M19.07 19.07l-4.24-4.24"/>
+            </svg>
+            <div>
+              <div class="text-[9px] uppercase font-semibold text-[#66889d] tracking-wider">GNSS</div>
+              <div class="text-[11px] font-bold text-slate-200">12 Satellites</div>
+            </div>
+            <!-- Signal Bars -->
+            <div class="flex items-end gap-0.5 ml-1 h-3.5">
+              <span class="w-1 h-1.5 bg-emerald-400 rounded-xs"></span>
+              <span class="w-1 h-2 bg-emerald-400 rounded-xs"></span>
+              <span class="w-1 h-2.5 bg-emerald-400 rounded-xs"></span>
+              <span class="w-1 h-3 bg-emerald-400 rounded-xs"></span>
+            </div>
+          </div>
+
+          <!-- HEADING / AZIMUTH -->
+          <div class="flex items-center gap-2 px-2">
+            <!-- Reticle / Compass Icon -->
+            <svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+              <polygon points="12,8 14,12 12,11 10,12" fill="#00e676" stroke="none"/>
+            </svg>
+            <div>
+              <div class="text-[9px] uppercase font-semibold text-[#66889d] tracking-wider">Heading</div>
+              <div id="telemetry-heading" class="text-[11px] font-bold text-slate-200 font-mono">124° SE</div>
+            </div>
+          </div>
+
+          <!-- ALTITUDE -->
+          <div class="flex items-center gap-2 px-2">
+            <svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 19l6-11 5 8 7-11"/>
+              <path d="M8 19l4-6 4 6"/>
+            </svg>
+            <div>
+              <div class="text-[9px] uppercase font-semibold text-[#66889d] tracking-wider">Altitude</div>
+              <div id="telemetry-altitude" class="text-[11px] font-bold text-slate-200 font-mono">1,842 m</div>
+            </div>
+          </div>
+
+          <!-- RF SIGNAL LINK -->
+          <div class="hidden lg:flex items-center gap-1 text-cyan-400">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="18" r="2"/>
+              <path d="M8.5 14.5a5 5 0 0 1 7 0" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M5.5 11.5a9 9 0 0 1 13 0" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+
+          <!-- AMBIENT TEMPERATURE & VOLTAGE -->
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5">
+              <!-- Sun Icon with rays -->
+              <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+              </svg>
+              <span class="text-sm font-bold text-slate-100">28°C</span>
+            </div>
+            <!-- Battery Icon & Bus Voltage -->
+            <div class="flex items-center gap-1 text-emerald-400 font-mono text-[11px]">
+              <svg class="w-4 h-3 text-emerald-400" viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="1" width="19" height="12" rx="2"/>
+                <path d="M22 5v4" stroke-linecap="round"/>
+                <rect x="3" y="3" width="13" height="8" fill="#00e676"/>
+              </svg>
+              <span>28.6 V</span>
+            </div>
+          </div>
+
+        </header>
+
+        <!-- MAIN CONTENT CONTAINER (Switchable between Home, Map, Waypoints, Camera, Logs) -->
+        <main id="tab-viewport" class="p-3 sm:p-4 flex-1 overflow-y-auto">
+
+          <!-- VIEW: HOME (The 6 exact military dashboard widgets from photo) -->
+          <section id="view-home" class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 h-full content-between">
+
+            <!-- EMERGENCY SOS ACTIVE DASHBOARD BANNER (Displayed when emergency is triggered) -->
+            <div id="sos-dashboard-alert-banner" class="hidden md:col-span-12 rounded-xl p-3 sm:p-4 bg-red-950/90 border-2 border-red-500 shadow-2xl relative overflow-hidden flex flex-wrap items-center justify-between gap-3 sos-banner-glow select-none">
+              <!-- Left: Siren Icon + Alarm Text -->
+              <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-lg animate-pulse">
+                  <i data-lucide="siren" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded bg-red-600 text-white font-extrabold text-[11px] font-mono tracking-wider animate-ping">CRITICAL</span>
+                    <h3 class="font-tactical font-black text-base sm:text-lg text-white tracking-widest uppercase">EMERGENCY SOS DISTRESS BROADCAST ACTIVE</h3>
+                  </div>
+                  <p class="text-xs font-mono text-red-200 mt-0.5">
+                    TRANSMITTING HIGH-PRIORITY MILITARY MAYDAY &bull; FREQ: 406.025 MHz &bull; GRID: <span id="sos-alert-coords" class="text-yellow-300 font-bold">34.2122° N, 77.5867° E</span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Right: Distress Timer & Cancel Switch -->
+              <div class="flex items-center gap-3">
+                <div class="text-right font-mono text-xs">
+                  <div class="text-slate-300 text-[10px]">TIME ELAPSED:</div>
+                  <div id="sos-alert-timer" class="text-yellow-300 font-bold text-sm">00:01</div>
+                </div>
+                <button onclick="dismissEmergencySos()" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-red-500/60 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow">
+                  <i data-lucide="x-circle" class="w-4 h-4 text-red-400"></i>
+                  <span>STAND DOWN (CANCEL SOS)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- CARD 1: VEHICLE STATUS (Col span 5 on desktop) -->
+            <div class="md:col-span-5 bg-[#091924]/90 border border-[#14364c] rounded-xl p-3 sm:p-4 relative shadow-lg">
+              <!-- Card Header -->
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2 text-slate-200">
+                  <i data-lucide="shield" class="w-4 h-4 text-emerald-400"></i>
+                  <span class="text-xs font-bold uppercase tracking-wider font-tactical">TACTICAL VEHICLE STATUS</span>
+                </div>
+                <!-- Operational Pill -->
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#0d3429] text-emerald-400 border border-emerald-500/40 tracking-wide">
+                  Operational
+                </span>
+              </div>
+
+              <!-- Content: 3D Rotating Vehicle Viewport + Telemetry Metrics -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                <!-- 3D WebGL Rotating Army Car Viewport -->
+                <div class="sm:col-span-6 flex flex-col items-center justify-center relative group">
+                  <div id="vehicle-3d-wrapper" ondblclick="expand3dVehicleModal()" title="Double click to expand to full frame 360° vehicle inspection" class="relative w-full h-[185px] rounded-lg overflow-hidden bg-[#061017] border border-[#14394f] shadow-inner flex items-center justify-center cursor-pointer group/viewport">
+                    <canvas id="vehicle-3d-canvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+                    <!-- Tactical Loading Spinner (Auto-fades when 3D engine loads) -->
+                    <div id="vehicle-3d-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#061017]/95 z-20 transition-opacity duration-500 pointer-events-none">
+                      <div class="w-7 h-7 rounded-full border-2 border-emerald-500/20 border-t-emerald-400 animate-spin mb-2"></div>
+                      <span class="text-[9px] font-mono text-emerald-400 tracking-wider">SYNCING 3D SENSORS...</span>
+                    </div>
+                    
+                    <!-- 3D HUD Live Status Overlay -->
+                    <div class="absolute top-1.5 left-2 flex items-center gap-1.5 text-[9px] font-mono text-emerald-400 bg-black/70 px-1.5 py-0.5 rounded border border-emerald-500/30 select-none pointer-events-none">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span id="vehicle-3d-title">3D LIVE: TACTICAL 4x4 SUV</span>
+                    </div>
+
+                    <!-- Rotate, Wireframe & Expand Toggles -->
+                    <div class="absolute top-1.5 right-2 flex items-center gap-1 z-10">
+                      <button onclick="toggle3dRotate(event)" title="Toggle Rotation" id="btn-3d-rotate" class="px-1.5 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 text-[10px] text-cyan-400 font-mono border border-cyan-500/30 transition-colors">
+                        ⟳ ROTATE
+                      </button>
+                      <button onclick="toggle3dWireframe(event)" title="Toggle Holographic Wireframe" id="btn-3d-wire" class="px-1.5 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 text-[10px] text-emerald-400 font-mono border border-emerald-500/30 transition-colors">
+                        GRID
+                      </button>
+                      <button onclick="expand3dVehicleModal()" title="Expand 3D Vehicle (Double-Click)" class="px-1.5 py-0.5 rounded bg-emerald-950/80 hover:bg-emerald-900 text-[10px] text-emerald-300 font-mono border border-emerald-500/40 transition-colors flex items-center gap-0.5">
+                        <i data-lucide="maximize-2" class="w-3 h-3"></i>
+                        <span>EXPAND</span>
+                      </button>
+                    </div>
+
+                    <!-- Bottom Drag & Double Click Instruction -->
+                    <div class="absolute bottom-1.5 left-2.5 text-[10px] text-[#63879d] font-mono pointer-events-none select-none flex items-center gap-1">
+                      <span class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                      <span>DBL-CLICK TO EXPAND &bull; DRAG TO ROTATE &bull; SCROLL TO ZOOM</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between w-full mt-1.5 px-0.5">
+                    <span id="vehicle-3d-model-label" class="text-[10px] text-emerald-400 font-mono tracking-wider font-semibold">TACTICAL PATROL 4x4</span>
+                    <span class="text-[9px] text-[#608295] font-mono">STANAG L-II</span>
+                  </div>
+                </div>
+
+                <!-- Right Telemetry Metrics & Progress Bars -->
+                <div class="sm:col-span-6 space-y-2 text-xs">
+                  <!-- Vehicle Class -->
+                  <div class="flex items-center justify-between">
+                    <span class="text-[#7292a4]">Vehicle Class</span>
+                    <span class="font-bold text-slate-100 font-mono">Tactical 4x4 SUV</span>
+                  </div>
+
+                  <!-- Fuel Level -->
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-[#7292a4]">Fuel Level</span>
+                      <span id="val-fuel" class="font-bold text-slate-100 font-mono">68%</span>
+                    </div>
+                    <div class="w-full h-2 rounded tac-progress-track overflow-hidden p-0.5">
+                      <div id="bar-fuel" class="h-full rounded-sm tac-progress-bar segmented-bar" style="width: 68%;"></div>
+                    </div>
+                  </div>
+
+                  <!-- Engine Temp -->
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-[#7292a4]">Engine Temp</span>
+                      <span id="val-engine-temp" class="font-bold text-slate-100 font-mono">82°C</span>
+                    </div>
+                    <div class="w-full h-2 rounded tac-progress-track overflow-hidden p-0.5">
+                      <div id="bar-engine-temp" class="h-full rounded-sm tac-progress-bar segmented-bar" style="width: 82%;"></div>
+                    </div>
+                  </div>
+
+                  <!-- Coolant Temp -->
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-[#7292a4]">Coolant Temp</span>
+                      <span id="val-coolant-temp" class="font-bold text-slate-100 font-mono">76°C</span>
+                    </div>
+                    <div class="w-full h-2 rounded tac-progress-track overflow-hidden p-0.5">
+                      <div id="bar-coolant-temp" class="h-full rounded-sm tac-progress-bar segmented-bar" style="width: 76%;"></div>
+                    </div>
+                  </div>
+
+                  <!-- Battery Voltage -->
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-[#7292a4]">Battery Voltage</span>
+                      <span id="val-battery" class="font-bold text-slate-100 font-mono">28.6 V</span>
+                    </div>
+                    <div class="w-full h-2 rounded tac-progress-track overflow-hidden p-0.5">
+                      <div id="bar-battery" class="h-full rounded-sm tac-progress-bar segmented-bar" style="width: 95%;"></div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 2: SYSTEMS (Col span 3.5 on desktop) -->
+            <div class="md:col-span-3 bg-[#091924]/90 border border-[#14364c] rounded-xl p-3 sm:p-4 relative shadow-lg">
+              <div class="flex items-center gap-2 mb-3 text-slate-200">
+                <i data-lucide="settings" class="w-4 h-4 text-slate-300"></i>
+                <span class="text-xs font-bold uppercase tracking-wider font-tactical">SYSTEMS</span>
+              </div>
+
+              <!-- Systems Status List with Green Dots and OK Status -->
+              <div class="space-y-2.5 text-xs">
+                <!-- Engine -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <span class="text-slate-300 font-medium">Engine</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+
+                <!-- Transmission -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <span class="text-slate-300 font-medium">Transmission</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+
+                <!-- Brakes -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <span class="text-slate-300 font-medium">Brakes</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+
+                <!-- Electrical -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <span class="text-slate-300 font-medium">Electrical</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <span class="text-slate-300 font-medium">Navigation</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+
+                <!-- Weapon System -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <span class="text-slate-300 font-medium">Weapon System</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 3: COMMUNICATIONS (Col span 3.5 on desktop) -->
+            <div class="md:col-span-4 bg-[#091924]/90 border border-[#14364c] rounded-xl p-3 sm:p-4 relative shadow-lg flex flex-col justify-between">
+              <div>
+                <div class="flex items-center gap-2 mb-3 text-slate-200">
+                  <!-- Radio / Transmission waves icon -->
+                  <i data-lucide="radio" class="w-4 h-4 text-slate-300"></i>
+                  <span class="text-xs font-bold uppercase tracking-wider font-tactical">COMMUNICATIONS</span>
+                </div>
+
+                <!-- Communications Channels List -->
+                <div class="space-y-2.5 text-xs">
+                  <!-- Radio VHF -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                      <span class="text-slate-300 font-medium">Radio (VHF)</span>
+                    </div>
+                    <span class="font-bold text-emerald-400 font-mono">Connected</span>
+                  </div>
+
+                  <!-- Radio UHF -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                      <span class="text-slate-300 font-medium">Radio (UHF)</span>
+                    </div>
+                    <span class="font-bold text-emerald-400 font-mono">Connected</span>
+                  </div>
+
+                  <!-- Satellite Link (Standby - gray indicator) -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                      <span class="text-slate-300 font-medium">Satellite Link</span>
+                    </div>
+                    <span class="font-bold text-[#55819e] font-mono">Standby</span>
+                  </div>
+
+                  <!-- Data Link -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                      <span class="text-slate-300 font-medium">Data Link</span>
+                    </div>
+                    <span class="font-bold text-emerald-400 font-mono">Connected</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Channel Subtext Footer -->
+              <div class="pt-3 mt-2 border-t border-[#13354b] flex items-center justify-between text-[11px] text-[#5e8197] font-mono">
+                <span>Ch 1 - Command</span>
+                <span>Ch 3 - Squad</span>
+              </div>
+            </div>
+
+            <!-- CARD 4: CREW (Col span 3 on desktop) -->
+            <div class="md:col-span-3 bg-[#091924]/90 border border-[#14364c] rounded-xl p-3 sm:p-4 relative shadow-lg">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2 text-slate-200">
+                  <i data-lucide="user" class="w-4 h-4 text-slate-300"></i>
+                  <span class="text-xs font-bold uppercase tracking-wider font-tactical">CREW</span>
+                </div>
+              </div>
+              <div class="text-[11px] text-[#5d8095] mb-2 font-mono">Crew (4/4)</div>
+
+              <!-- Crew Members List -->
+              <div class="space-y-2 text-xs">
+                <!-- Commander -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="text-slate-200">Commander</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+
+                <!-- Gunner -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="text-slate-200">Gunner</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+
+                <!-- Driver -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="text-slate-200">Driver</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+
+                <!-- Loader -->
+                <div class="flex items-center justify-between py-0.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-dot-pulse"></span>
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="text-slate-200">Loader</span>
+                  </div>
+                  <span class="font-bold text-emerald-400 font-mono">OK</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 5: WEATHER (Col span 5 on desktop) -->
+            <div class="md:col-span-5 bg-[#091924]/90 border border-[#14364c] rounded-xl p-3 sm:p-4 relative shadow-lg">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2 text-slate-200">
+                  <i data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
+                  <span class="text-xs font-bold uppercase tracking-wider font-tactical">WEATHER & METEOROLOGY</span>
+                </div>
+                <!-- Real Weather Live Location Tag & Refresh -->
+                <div class="flex items-center gap-1.5">
+                  <span id="weather-location" class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950/80 text-cyan-300 border border-cyan-800/50 flex items-center gap-1">
+                    <i data-lucide="map-pin" class="w-3 h-3 text-cyan-400"></i>
+                    SITAPURA, JAIPUR
+                  </span>
+                  <button onclick="refreshLiveWeather()" title="Sync Live Weather" class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                    <i data-lucide="refresh-cw" class="w-3 h-3" id="weather-sync-icon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Weather Overview: Temperature, Sky condition & Secondary metrics -->
+              <div class="flex items-center justify-between py-1">
+                <!-- Icon + Temp -->
+                <div class="flex items-center gap-3">
+                  <!-- Weather Icon Placeholder -->
+                  <div class="relative" id="weather-icon-container">
+                    <svg class="w-9 h-9 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="4"/>
+                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2"/>
+                    </svg>
+                    <svg class="w-6 h-6 text-slate-300 absolute -bottom-1 -right-1" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h.79a4.5 4.5 0 1 1 1 8.9z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div id="weather-temp" class="text-2xl font-bold text-white tracking-tight">--°C</div>
+                    <div id="weather-cond" class="text-[11px] text-[#7898aa]">Loading Sitapura live feed...</div>
+                  </div>
+                </div>
+
+                <!-- Secondary Weather Metrics -->
+                <div class="text-xs space-y-1 text-right">
+                  <div class="flex justify-between gap-4">
+                    <span class="text-[#5f8196]">Humidity</span>
+                    <span id="weather-humidity" class="font-mono text-slate-200 font-semibold">--%</span>
+                  </div>
+                  <div class="flex justify-between gap-4">
+                    <span class="text-[#5f8196]">Wind</span>
+                    <span id="weather-wind" class="font-mono text-slate-200 font-semibold">-- km/h</span>
+                  </div>
+                  <div class="flex justify-between gap-4">
+                    <span class="text-[#5f8196]">Visibility</span>
+                    <span id="weather-visibility" class="font-mono text-slate-200 font-semibold">-- km</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hourly Forecast Sub-row -->
+              <div id="weather-hourly-container" class="grid grid-cols-4 gap-2 pt-2.5 mt-2 border-t border-[#13354b] text-center text-xs">
+                <!-- Hourly slots populated dynamically by JS -->
+                <div class="flex flex-col items-center">
+                  <span class="text-[10px] text-[#6a8b9f]">Now</span>
+                  <i data-lucide="sun" class="w-4 h-4 text-amber-400 my-1"></i>
+                  <span class="font-bold text-slate-200 font-mono">--°</span>
+                </div>
+                <div class="flex flex-col items-center">
+                  <span class="text-[10px] text-[#6a8b9f]">+1h</span>
+                  <i data-lucide="cloud-sun" class="w-4 h-4 text-amber-400 my-1"></i>
+                  <span class="font-bold text-slate-200 font-mono">--°</span>
+                </div>
+                <div class="flex flex-col items-center">
+                  <span class="text-[10px] text-[#6a8b9f]">+2h</span>
+                  <i data-lucide="cloud-sun" class="w-4 h-4 text-amber-400 my-1"></i>
+                  <span class="font-bold text-slate-200 font-mono">--°</span>
+                </div>
+                <div class="flex flex-col items-center">
+                  <span class="text-[10px] text-[#6a8b9f]">+3h</span>
+                  <i data-lucide="moon" class="w-4 h-4 text-slate-300 my-1"></i>
+                  <span class="font-bold text-slate-200 font-mono">--°</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 6: NOTIFICATIONS (Col span 4 on desktop) -->
+            <div class="md:col-span-4 bg-[#091924]/90 border border-[#14364c] rounded-xl p-3 sm:p-4 relative shadow-lg flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2 text-slate-200">
+                    <i data-lucide="bell" class="w-4 h-4 text-slate-300"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider font-tactical">NOTIFICATIONS</span>
+                  </div>
+                  <button onclick="playBeep(920, 0.05); switchTab('logs');" class="text-[11px] text-[#38bdf8] hover:underline">View All</button>
+                </div>
+
+                <!-- Notifications Feed with Exact Entries from Image -->
+                <div class="space-y-2 text-xs">
+                  <!-- Item 1: Target spotted (Red warning) -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2 truncate">
+                      <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500 shrink-0"></i>
+                      <span class="text-slate-200 truncate">Target spotted (1.2 km)</span>
+                    </div>
+                    <span class="font-mono text-[#66879c] text-[11px] shrink-0">14:18</span>
+                  </div>
+
+                  <!-- Item 2: System check completed (Blue info) -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2 truncate">
+                      <i data-lucide="info" class="w-3.5 h-3.5 text-sky-400 shrink-0"></i>
+                      <span class="text-slate-200 truncate">System check completed</span>
+                    </div>
+                    <span class="font-mono text-[#66879c] text-[11px] shrink-0">13:56</span>
+                  </div>
+
+                  <!-- Item 3: Mission parameters loaded (Green check) -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2 truncate">
+                      <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
+                      <span class="text-slate-200 truncate">Mission parameters loaded</span>
+                    </div>
+                    <span class="font-mono text-[#66879c] text-[11px] shrink-0">12:43</span>
+                  </div>
+
+                  <!-- Item 4: New message received (Blue info) -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2 truncate">
+                      <i data-lucide="info" class="w-3.5 h-3.5 text-sky-400 shrink-0"></i>
+                      <span class="text-slate-200 truncate">New message received</span>
+                    </div>
+                    <span class="font-mono text-[#66879c] text-[11px] shrink-0">11:32</span>
+                  </div>
+
+                  <!-- Item 5: Low fuel (Amber warning) -->
+                  <div class="flex items-center justify-between py-0.5">
+                    <div class="flex items-center gap-2 truncate">
+                      <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
+                      <span class="text-slate-200 truncate">Low fuel (68%)</span>
+                    </div>
+                    <span class="font-mono text-[#66879c] text-[11px] shrink-0">10:12</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- VIEW: TACTICAL MAP (Interactive Radar Sweep & Map View) -->
+                    <!-- VIEW: TACTICAL GEOSPATIAL MAP (2D & 3D Real Google Maps & Satellite) -->
+                    <!-- VIEW: TACTICAL GEOSPATIAL MAP (2D & 3D Real Google Maps & Satellite) -->
+          <section id="view-map" class="hidden h-full bg-[#061219] border border-[#14364c] rounded-xl relative overflow-hidden flex flex-col">
+            <!-- Map Top HUD Bar -->
+            <div class="px-3 py-2 bg-[#081824]/95 border-b border-[#14364c] flex flex-wrap items-center justify-between gap-2 text-xs z-20 shadow-md">
+              
+              <!-- Left: Sector & Status -->
+              <div class="flex items-center gap-2">
+                <span class="font-tactical font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
+                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i>
+                  TACTICAL NAVIGATION
+                </span>
+                <span id="hud-live-sector" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px] border border-slate-700">
+                  LADAKH SECTOR
+                </span>
+                <span id="map-perspective-badge" class="hidden xl:inline-block text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">
+                  2D ORTHOGRAPHIC TOP-DOWN
+                </span>
+              </div>
+
+              <!-- Center: 2D vs 3D & Navigation Mode (Track-Up vs North-Up) -->
+              <div class="flex items-center gap-2">
+                <!-- 2D / 3D Toggle -->
+                <div class="flex items-center p-0.5 bg-slate-900/90 rounded-lg border border-[#18425d] shadow-inner">
+                  <button id="btn-map-mode-2d" onclick="setMapMode('2d')" class="px-2.5 py-1 rounded bg-emerald-500/25 border border-emerald-400 text-emerald-300 font-mono text-xs font-bold transition-all shadow-[0_0_12px_rgba(0,230,118,0.4)] flex items-center gap-1.5">
+                    <i data-lucide="map" class="w-3.5 h-3.5"></i>
+                    2D VIEW
+                  </button>
+                  <button id="btn-map-mode-3d" onclick="setMapMode('3d')" class="px-2.5 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 font-mono text-xs transition-all flex items-center gap-1.5">
+                    <i data-lucide="box" class="w-3.5 h-3.5"></i>
+                    3D VIEW
+                  </button>
+                </div>
+
+                <!-- Google Maps Track-Up (Arrow Pointing UP) vs North-Up Toggle -->
+                <button id="btn-nav-orientation" onclick="toggleNavigationOrientation()" title="Toggle Google Maps Driving Orientation" class="px-2.5 py-1 rounded bg-slate-900/90 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                  <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  TRACK-UP (DRIVE)
+                </button>
+
+                <!-- Live Offroad Driving Movement Simulation (Play/Pause) -->
+                <button id="btn-toggle-drive" onclick="toggleDrivingSimulation()" title="Play / Pause Offroad Vehicle Movement" class="px-2.5 py-1 rounded bg-slate-900/90 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                  <i data-lucide="play" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  DRIVE
+                </button>
+              </div>
+
+              <!-- Right: Map Layer Switcher (Satellite, Hybrid, Topo Color, Dark, Terrain) & Re-center -->
+              <div class="flex items-center gap-1.5">
+                <!-- Layer Pills -->
+                <div class="flex items-center gap-1 bg-slate-900/80 p-0.5 rounded-lg border border-slate-700/60">
+                  <button data-map-layer="satellite" onclick="setMapLayer('satellite')" class="px-2 py-1 rounded bg-emerald-950/90 text-emerald-400 border border-emerald-500/60 font-mono text-[11px] font-semibold transition-all shadow-[0_0_8px_rgba(0,230,118,0.25)]">
+                    SATELLITE
+                  </button>
+                  <button data-map-layer="hybrid" onclick="setMapLayer('hybrid')" class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 font-mono text-[11px] transition-all">
+                    HYBRID
+                  </button>
+                  <button data-map-layer="topo_color" onclick="setMapLayer('topo_color')" class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 font-mono text-[11px] transition-all" title="Vibrant Topographic Elevation Relief & Contours">
+                    TOPO COLOR
+                  </button>
+                  <button data-map-layer="dark" onclick="setMapLayer('dark')" class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 font-mono text-[11px] transition-all">
+                    DARK
+                  </button>
+                </div>
+
+                <!-- Re-center on vehicle -->
+                <button onclick="centerVehicle()" title="Re-center on Vehicle Position" class="px-2.5 py-1 rounded bg-emerald-950/90 hover:bg-emerald-900 text-emerald-400 border border-emerald-500/50 font-mono text-xs font-semibold flex items-center gap-1 transition-colors">
+                  <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+                  CENTER
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Map Viewport Stage (Supports 2D Orthographic & 3D Perspective Pitch) -->
+            <div id="map-stage-wrapper" class="map-stage-wrapper relative flex-1 bg-[#040d12] overflow-hidden">
+              <div id="tactical-map-viewport" class="w-full h-full"></div>
+
+              <!-- Top-Left Floating Tactical Telemetry Box with Live Dynamic Values -->
+              <div class="absolute top-3 left-3 bg-[#071622]/92 border border-[#14394f] rounded-lg p-2.5 text-[11px] font-mono shadow-xl z-[400] space-y-1 pointer-events-none select-none">
+                <div class="text-emerald-400 font-bold flex items-center gap-1.5 pb-1 border-b border-[#14364c]">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  LIVE GPS NAVIGATION
+                </div>
+                <div class="text-slate-300">LAT: <span id="hud-live-lat" class="text-white font-semibold">34.2122° N</span></div>
+                <div class="text-slate-300">LON: <span id="hud-live-lon" class="text-white font-semibold">77.5867° E</span></div>
+                <div class="text-slate-300">HEADING: <span id="hud-live-heading" class="text-cyan-400 font-semibold">052° NE</span></div>
+                <div class="text-slate-300">SPEED: <span id="hud-live-speed" class="text-emerald-300 font-bold">24 km/h</span> <span class="text-[9px] text-slate-400">(OFFROAD)</span></div>
+                <div class="text-[10px] text-slate-400 pt-0.5 border-t border-[#14364c]/60">SATS: 12 • HDOP: 0.8 • 4x4 ENGAGED</div>
+              </div>
+
+              <!-- Top-Right Tactical Zoom & Compass Controls -->
+              <div class="absolute top-3 right-3 flex flex-col gap-1.5 z-[400]">
+                <button onclick="zoomMap(1)" class="w-8 h-8 rounded-lg bg-[#071622]/90 hover:bg-slate-700 text-slate-200 border border-[#18425d] font-mono text-base font-bold flex items-center justify-center shadow-lg transition-colors">
+                  +
+                </button>
+                <button onclick="zoomMap(-1)" class="w-8 h-8 rounded-lg bg-[#071622]/90 hover:bg-slate-700 text-slate-200 border border-[#18425d] font-mono text-base font-bold flex items-center justify-center shadow-lg transition-colors">
+                  -
+                </button>
+                <!-- Compass Rose needle -->
+                <button onclick="centerVehicle()" title="Reset to Vehicle Position" class="w-8 h-8 rounded-lg bg-[#071622]/90 hover:bg-slate-700 text-emerald-400 border border-[#18425d] flex items-center justify-center shadow-lg transition-colors">
+                  <div id="map-compass-needle" class="transition-transform duration-300">
+                    <i data-lucide="navigation" class="w-4 h-4"></i>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Bottom-Left Tactical Target Alert -->
+              <div class="absolute bottom-3 left-3 bg-[#130707]/90 border border-red-500/50 rounded-lg p-2.5 text-[11px] font-mono shadow-xl z-[400] space-y-0.5 pointer-events-none select-none">
+                <div class="text-red-400 font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                  HOSTILE CONTACT #T-84 (1.2 KM)
+                </div>
+                <div class="text-slate-300">BEARING: 042° NE • RANGE: 1,210 m</div>
+                <div class="text-slate-400">IFF: CONFIRMED UNKNOWN / HOSTILE</div>
+              </div>
+
+              <!-- Hypsometric Elevation Legend (Visualizing Depth & Height) -->
+              <div id="topo-elevation-legend" class="hidden absolute bottom-10 right-3 z-[400] bg-[#071622]/95 backdrop-blur-md p-2 rounded-lg border border-emerald-500/50 shadow-2xl font-mono flex items-center gap-2.5 pointer-events-none select-none">
+                <div class="w-3 h-28 rounded-full border border-slate-600 shadow-inner" style="background: linear-gradient(to top, #0a2d55 0%, #0082c8 15%, #00d28c 30%, #5ae114 45%, #ffd700 60%, #ff8200 75%, #eb2d41 88%, #a01edc 96%, #ffffff 100%);"></div>
+                <div class="flex flex-col justify-between h-28 text-[9px] leading-tight font-semibold">
+                  <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-white"></span><span class="text-white font-bold">&gt;4,900m (PEAK)</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#a01edc]"></span><span class="text-purple-300">4,700m (CREST)</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#eb2d41]"></span><span class="text-rose-400">4,500m (RIDGE)</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#ff8200]"></span><span class="text-amber-400">4,300m (PASS)</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#ffd700]"></span><span class="text-yellow-300">4,100m (SLOPE)</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#00d28c]"></span><span class="text-emerald-300">3,850m (CAMP)</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#0082c8]"></span><span class="text-cyan-400">&lt;3,500m (DEPTH)</span></div>
+                </div>
+              </div>
+
+              <!-- Bottom-Right Attribution & Layer Name -->
+              <div class="absolute bottom-3 right-3 bg-[#071622]/85 border border-[#14394f] px-2 py-1 rounded text-[10px] font-mono text-slate-400 z-[400] select-none pointer-events-none">
+                LAYER: <span id="map-active-layer-name" class="text-emerald-400 font-semibold">SATELLITE</span> • GEOSPATIAL LIVE
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW: CAMERA (High-Def Optical EO Camera & 3D Adaptive LiDAR Dual Feed) -->
+          <section id="view-camera" class="hidden h-full bg-black border border-[#14364c] rounded-xl relative overflow-hidden flex flex-col">
+            <!-- Camera / LiDAR Top Header Bar -->
+            <div class="p-2.5 sm:p-3 bg-[#081824]/95 border-b border-[#14364c] flex flex-wrap items-center justify-between gap-2 text-xs z-20">
+              <div class="flex items-center gap-2 sm:gap-3">
+                <span class="font-tactical font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
+                  <i data-lucide="video" class="w-4 h-4"></i>
+                  <span id="optic-feed-title">FORWARD SENSOR FEED</span>
+                </span>
+                <!-- Mode Badge -->
+                <span id="optic-mode-badge" class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/50 font-mono text-[11px] font-semibold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                  EO OPTICAL CAMERA
+                </span>
+                <!-- Time-sync indicator -->
+                <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-mono text-[10px]">
+                  <i data-lucide="refresh-cw" class="w-3 h-3 text-cyan-400"></i>
+                  SYNC LOCKED (0ms)
+                </span>
+              </div>
+
+              <!-- Channel Switcher Controls (Camera vs LiDAR vs Split vs PiP) & Sensor Filters -->
+              <div class="flex items-center gap-2 font-mono">
+                <!-- Sensor Channels -->
+                <div class="flex items-center gap-1 bg-slate-900/90 p-0.5 rounded-lg border border-slate-700/70">
+                  <button id="btn-chan-cam" onclick="setOpticChannel('camera')" class="px-2.5 py-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/60 text-xs font-semibold flex items-center gap-1 transition-all shadow-[0_0_8px_rgba(0,230,118,0.25)]">
+                    <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                    CAMERA
+                  </button>
+                  <button id="btn-chan-lidar" onclick="setOpticChannel('lidar')" class="px-2.5 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1 transition-all">
+                    <i data-lucide="radar" class="w-3.5 h-3.5 text-cyan-400"></i>
+                    3D LIDAR
+                  </button>
+                  <button id="btn-chan-split" onclick="setOpticChannel('split')" class="hidden sm:flex px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold items-center gap-1 transition-all" title="Split Dual View">
+                    <i data-lucide="columns" class="w-3.5 h-3.5"></i>
+                    SPLIT
+                  </button>
+                  <button id="btn-chan-pip" onclick="setOpticChannel('pip')" class="hidden sm:flex px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold items-center gap-1 transition-all" title="Picture-in-Picture">
+                    <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                    PiP
+                  </button>
+                </div>
+
+                <!-- Tactical Sensor Palette Filter (Day / NVG / Thermal) -->
+                <div class="hidden md:flex items-center gap-1 bg-slate-900/90 p-0.5 rounded-lg border border-slate-700/70">
+                  <button id="btn-palette-day" onclick="setOpticPalette('day')" class="px-2 py-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/50 text-[11px] font-semibold">DAY</button>
+                  <button id="btn-palette-nvg" onclick="setOpticPalette('nvg')" class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold">NVG</button>
+                  <button id="btn-palette-flir" onclick="setOpticPalette('thermal')" class="px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold">FLIR</button>
+                </div>
+
+                <!-- Laser Rangefinder Ping -->
+                <button onclick="toggleLaserRangefinder()" title="Laser Rangefinder Target Ping" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs flex items-center gap-1">
+                  <i data-lucide="target" class="w-3.5 h-3.5 text-cyan-400"></i>
+                  <span class="hidden sm:inline">LRF</span>
+                </button>
+
+                <!-- Reticle Toggle -->
+                <button onclick="toggleOpticReticle()" title="Toggle Reticle Overlay" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs flex items-center gap-1">
+                  <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sensor Viewport Stage (NO VIDEO BAR - 100% CLEAN HUD VIEWPORT) -->
+            <div class="relative flex-1 bg-black overflow-hidden flex items-center justify-center select-none" id="camera-feed-box">
+              <!-- Video 1: Optical Camera (EO Natural Driving View) -->
+              <video id="optic-video-camera" src="gemini_generated_video_0d19fe96.mp4" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-150" loop muted playsinline preload="auto"></video>
+
+              <!-- Video 2: 3D Adaptive LiDAR View (Point Cloud / Scanlines) -->
+              <video id="optic-video-lidar" src="gemini_generated_video_0d19fe96_20260920233844.mp4" class="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none transition-opacity duration-150" loop muted playsinline preload="auto"></video>
+
+              <!-- Picture-in-Picture Inset Box (Active only in PiP mode) -->
+              <div id="optic-pip-box" class="hidden absolute bottom-4 right-4 w-72 h-44 rounded-lg overflow-hidden border-2 border-emerald-400/80 shadow-2xl z-30 bg-black cursor-pointer" onclick="swapPipChannel()" title="Click to swap feeds">
+                <video id="optic-video-pip" class="w-full h-full object-cover" loop muted playsinline></video>
+                <div class="absolute top-1 left-1.5 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-mono text-emerald-300 font-bold border border-emerald-500/40">
+                  <span id="pip-channel-label">3D LIDAR PiP</span>
+                </div>
+              </div>
+
+              <!-- Military Reticle Overlay -->
+              <div id="optic-reticle-layer" class="absolute inset-0 pointer-events-none flex items-center justify-center transition-opacity duration-200">
+                <div class="w-full h-[1px] bg-emerald-400/35 absolute"></div>
+                <div class="h-full w-[1px] bg-emerald-400/35 absolute"></div>
+                <!-- Mil-Dot Center Box -->
+                <div class="w-14 h-14 border border-emerald-400/70 rounded-sm flex items-center justify-center">
+                  <div class="w-1.5 h-1.5 bg-emerald-400"></div>
+                </div>
+                <!-- Corner Tactical Framing Brackets -->
+                <div class="absolute inset-4 pointer-events-none border border-emerald-500/20 rounded-lg">
+                  <div class="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-emerald-400"></div>
+                  <div class="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-emerald-400"></div>
+                  <div class="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-emerald-400"></div>
+                  <div class="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-emerald-400"></div>
+                </div>
+                <!-- Pitch ladder marks -->
+                <div class="absolute left-8 top-1/2 -translate-y-1/2 space-y-3 font-mono text-[10px] text-emerald-400/75 select-none">
+                  <div>+10°</div>
+                  <div>+05°</div>
+                  <div class="text-white font-bold">-- 00° LEVEL</div>
+                  <div>-05°</div>
+                  <div>-10°</div>
+                </div>
+              </div>
+
+              <!-- Top-Left Telemetry Float (Live Sensor Metadata) -->
+              <div class="absolute top-4 left-4 font-mono text-xs text-emerald-400 space-y-1 bg-[#071622]/90 backdrop-blur-sm p-2.5 rounded-lg border border-emerald-500/40 shadow-xl select-none pointer-events-none z-10">
+                <div class="text-white font-bold flex items-center gap-1.5 pb-1 border-b border-[#14364c]">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span id="optic-telemetry-tag" class="text-emerald-400 font-tactical">EO OPTICAL CAMERA</span>
+                </div>
+                <div class="text-slate-300">STREAM: <span class="text-emerald-300 font-semibold">LIVE SENSOR FEED</span></div>
+                <div class="text-slate-300">RES: <span class="text-white font-semibold">1280x720 • 24 FPS</span></div>
+                <div class="text-slate-300">SYNC OFFSET: <span id="optic-sync-offset" class="text-emerald-300 font-bold">&lt; 1.5 ms (LOCKED)</span></div>
+                <div class="text-slate-300">LRF RANGE: <span class="text-cyan-300 font-semibold">1,248 METERS</span></div>
+                <div id="optic-lidar-meta" class="hidden text-cyan-300 text-[10px] pt-1 border-t border-[#14364c]">
+                  3D LIDAR: 128-BEAM ADAPTIVE • REAL-TIME
+                </div>
+              </div>
+
+              <!-- Top-Right Live Tactical Timestamp & Geolocation -->
+              <div class="absolute top-4 right-4 font-mono text-xs text-emerald-400 space-y-1 bg-[#071622]/90 backdrop-blur-sm p-2.5 rounded-lg border border-emerald-500/40 shadow-xl select-none pointer-events-none z-10 text-right">
+                <div class="text-slate-300 font-bold flex items-center justify-end gap-1.5 pb-1 border-b border-[#14364c]">
+                  <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  <span id="optic-live-clock" class="text-white font-mono">14:18:24.0 IST</span>
+                </div>
+                <div class="text-slate-300">MGRS: <span class="text-white font-semibold">43S XM 8842 1920</span></div>
+                <div class="text-slate-300">ELEV: <span class="text-emerald-300 font-semibold">1,842 m MSL</span></div>
+                <div class="text-slate-300">PALETTE: <span id="optic-palette-name" class="text-amber-300 font-semibold">DAYLIGHT EO</span></div>
+              </div>
+
+              <!-- Bottom-Left Vehicle Dynamics HUD -->
+              <div class="absolute bottom-4 left-4 font-mono text-xs text-emerald-400 space-y-1 bg-[#071622]/90 backdrop-blur-sm p-2 rounded-lg border border-emerald-500/40 shadow-xl select-none pointer-events-none z-10">
+                <div class="flex items-center gap-3">
+                  <div>SPEED: <span id="optic-hud-speed" class="text-white font-bold">32 KM/H</span></div>
+                  <div class="text-[#1f4a66]">|</div>
+                  <div>HEADING: <span class="text-cyan-300 font-bold">124° SE</span></div>
+                </div>
+                <div class="text-slate-300 text-[11px]">TERRAIN: <span class="text-emerald-300">UNPAVED OFFROAD TRAIL</span></div>
+                <div class="text-slate-300 text-[11px]">IMU: <span class="text-amber-300">PITCH +4.8° • ROLL -1.2°</span></div>
+              </div>
+
+              <!-- Bottom-Right Optical Status Strip -->
+              <div class="absolute bottom-4 right-4 font-mono text-[11px] text-slate-400 bg-[#071622]/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[#14364c] shadow-xl select-none pointer-events-none z-10 flex items-center gap-3">
+                <span class="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  CONTINUOUS SENSOR STREAM
+                </span>
+                <span class="text-slate-600">|</span>
+                <span>FOV: 85° WIDE</span>
+                <span class="text-slate-600">|</span>
+                <span id="optic-frame-display" class="text-slate-300">FRM: #02840</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW: WAYPOINTS -->
+          <section id="view-waypoints" class="hidden h-full bg-[#091924]/95 border border-[#14364c] rounded-xl p-4 shadow-lg flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between border-b border-[#14364c] pb-3 mb-3">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="map-pin" class="w-5 h-5 text-emerald-400"></i>
+                  <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100 font-tactical">TACTICAL WAYPOINTS (SECTOR 7)</h3>
+                </div>
+                <button onclick="addCurrentPositionWaypoint()" class="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono transition-colors">
+                  + MARK CURRENT POS
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="waypoint-cards-grid">
+                <!-- Waypoint 1 -->
+                <div class="p-3 rounded-lg bg-[#07141d] border border-[#1b435e] flex flex-col justify-between">
+                  <div>
+                    <div class="flex justify-between items-start mb-2">
+                      <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/40 text-xs font-mono font-bold">WP-01 [HOME]</span>
+                      <span class="text-xs text-slate-400 font-mono">0.0 km</span>
+                    </div>
+                    <h4 class="font-bold text-slate-200 text-sm">Forward Operating Base 'Trishul'</h4>
+                    <p class="text-xs text-[#6e8fa1] mt-1 font-mono">34°12'44"N 77°35'12"E</p>
+                  </div>
+                  <div class="mt-3 pt-2 border-t border-[#123145] flex justify-between text-xs text-emerald-400 font-mono">
+                    <span>SECURE ZONE</span>
+                    <span>REFUEL AVAIL</span>
+                  </div>
+                </div>
+
+                <!-- Waypoint 2 -->
+                <div class="p-3 rounded-lg bg-[#07141d] border border-cyan-500/40 flex flex-col justify-between shadow-[0_0_12px_rgba(56,189,248,0.1)]">
+                  <div>
+                    <div class="flex justify-between items-start mb-2">
+                      <span class="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-500/40 text-xs font-mono font-bold">WP-02 [OBJECTIVE]</span>
+                      <span class="text-xs text-cyan-300 font-mono font-bold">4.8 km</span>
+                    </div>
+                    <h4 class="font-bold text-slate-200 text-sm">Pass Observation Post (Ridge-4)</h4>
+                    <p class="text-xs text-[#6e8fa1] mt-1 font-mono">34°14'20"N 77°38'05"E</p>
+                  </div>
+                  <div class="mt-3 pt-2 border-t border-[#123145] flex justify-between text-xs text-cyan-400 font-mono">
+                    <span>BEARING: 062°</span>
+                    <span>ETA: 11 MIN</span>
+                  </div>
+                </div>
+
+                <!-- Waypoint 3 -->
+                <div class="p-3 rounded-lg bg-[#07141d] border border-amber-500/40 flex flex-col justify-between">
+                  <div>
+                    <div class="flex justify-between items-start mb-2">
+                      <span class="px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-500/40 text-xs font-mono font-bold">WP-03 [RALLY POINT]</span>
+                      <span class="text-xs text-slate-400 font-mono">9.4 km</span>
+                    </div>
+                    <h4 class="font-bold text-slate-200 text-sm">Secondary Extraction Point 'Bravo'</h4>
+                    <p class="text-xs text-[#6e8fa1] mt-1 font-mono">34°16'55"N 77°41'30"E</p>
+                  </div>
+                  <div class="mt-3 pt-2 border-t border-[#123145] flex justify-between text-xs text-amber-400 font-mono">
+                    <span>BEARING: 088°</span>
+                    <span>STANDBY</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Waypoint Navigation Telemetry Strip -->
+            <div class="p-3 rounded-lg bg-[#07141d] border border-[#14364c] grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
+              <div class="flex flex-col justify-center">
+                <div class="text-[#5d8095] text-[10px] uppercase font-bold tracking-wider">ACTIVE TARGET VECTOR</div>
+                <div class="text-sm font-bold text-cyan-400 mt-0.5 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                  WP-02 (RIDGE-4 POST)
+                </div>
+              </div>
+              <div class="flex flex-col justify-center sm:border-l border-[#13354b] sm:pl-3">
+                <div class="text-[#5d8095] text-[10px] uppercase font-bold tracking-wider">BEARING & DISTANCE</div>
+                <div class="text-sm font-bold text-slate-100 mt-0.5">062° NE / 4.8 KM</div>
+              </div>
+              <div class="flex flex-col justify-center sm:border-l border-[#13354b] sm:pl-3">
+                <div class="text-[#5d8095] text-[10px] uppercase font-bold tracking-wider">ESTIMATED TIME OF ARRIVAL</div>
+                <div class="text-sm font-bold text-emerald-400 mt-0.5">11 MIN (14:43 HRS)</div>
+              </div>
+              <div class="flex flex-col justify-center sm:border-l border-[#13354b] sm:pl-3">
+                <div class="text-[#5d8095] text-[10px] uppercase font-bold tracking-wider">NAV SENSOR LOCK</div>
+                <div class="text-sm font-bold text-emerald-400 mt-0.5 flex items-center gap-1">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                  DIFF-GNSS + INS OK
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW: PREVIEW (Replaces Routes: Tactical Mission Video Playback) -->
+          <section id="view-routes" class="hidden h-full bg-[#061219] border border-[#14364c] rounded-xl relative overflow-hidden flex flex-col justify-between">
+            <!-- Top Video HUD Bar -->
+            <div class="px-4 py-2.5 bg-[#081824]/95 border-b border-[#14364c] flex flex-wrap items-center justify-between gap-2 text-xs z-20 shadow-md">
+              <div class="flex items-center gap-2.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+                <span class="font-tactical font-bold tracking-wider text-emerald-400 uppercase text-sm flex items-center gap-1.5">
+                  <i data-lucide="video" class="w-4 h-4 text-emerald-400"></i>
+                  TACTICAL MISSION VIDEO PREVIEW
+                </span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-300 font-mono text-[11px] border border-cyan-800/50">
+                  REC: RECON-UAV-CAM-01
+                </span>
+              </div>
+
+              <!-- Video Control Actions -->
+              <div class="flex items-center gap-2">
+                <button onclick="togglePreviewPlay()" id="btn-preview-play" class="px-3 py-1 rounded bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/50 font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors shadow">
+                  <i data-lucide="play" class="w-3.5 h-3.5" id="icon-preview-play"></i>
+                  <span id="label-preview-play">PLAY</span>
+                </button>
+                <button onclick="restartPreviewVideo()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs border border-slate-600 flex items-center gap-1 transition-colors">
+                  <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                  <span>REPLAY</span>
+                </button>
+                <button onclick="togglePreviewMute()" id="btn-preview-mute" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs border border-slate-600 flex items-center gap-1 transition-colors">
+                  <i data-lucide="volume-x" class="w-3 h-3" id="icon-preview-mute"></i>
+                </button>
+                <button onclick="togglePreviewFullscreen()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs border border-slate-600 flex items-center gap-1 transition-colors">
+                  <i data-lucide="maximize" class="w-3 h-3"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Central Video Player Canvas Container -->
+            <div class="relative flex-1 w-full h-full bg-black flex items-center justify-center overflow-hidden group">
+              <!-- Video Source Binding -->
+              <video id="mission-preview-video" class="w-full h-full object-contain max-h-[calc(100vh-280px)] select-none" playsinline loop preload="auto">
+                <source src="gemini_generated_video_20b8e83b.mp4" type="video/mp4">
+                Your terminal browser does not support HTML5 video streaming.
+              </video>
+
+              <!-- Tactical Reticle & Grid Overlay On Top Of Video -->
+              <div class="absolute inset-0 pointer-events-none select-none flex flex-col justify-between p-4 z-10 crt-overlay">
+                <!-- Top OSD Metadata -->
+                <div class="flex justify-between items-start font-mono text-[11px] text-emerald-400 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                  <div class="space-y-0.5 bg-black/50 p-2 rounded border border-emerald-500/20 backdrop-blur-xs">
+                    <div>FEED: ENCRYPTED H.265 TACTICAL UAV LINK</div>
+                    <div class="text-white">SOURCE: C:\Users\Gaurav\Downloads\gemini_generated_video_20b8e83b.mp4</div>
+                    <div class="text-cyan-400">RESOLUTION: 1080P HD 60FPS &bull; SENSOR: EO/IR GIMBAL</div>
+                  </div>
+                  <div class="text-right space-y-0.5 bg-black/50 p-2 rounded border border-emerald-500/20 backdrop-blur-xs">
+                    <div class="text-red-400 font-bold flex items-center justify-end gap-1">
+                      <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                      REC 00:14:22
+                    </div>
+                    <div class="text-slate-300">GRID: 34.2122° N, 77.5867° E</div>
+                    <div class="text-amber-400">AZIMUTH: 124° SE &bull; ALT: 1,842 M</div>
+                  </div>
+                </div>
+
+                <!-- Center Crosshair Reticle -->
+                <div class="self-center my-auto relative w-24 h-24 flex items-center justify-center pointer-events-none opacity-60">
+                  <div class="w-16 h-16 border border-emerald-400/50 rounded-full"></div>
+                  <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  <div class="absolute top-0 w-0.5 h-4 bg-emerald-400"></div>
+                  <div class="absolute bottom-0 w-0.5 h-4 bg-emerald-400"></div>
+                  <div class="absolute left-0 w-4 h-0.5 bg-emerald-400"></div>
+                  <div class="absolute right-0 w-4 h-0.5 bg-emerald-400"></div>
+                </div>
+
+                <!-- Bottom Timeline & Status OSD -->
+                <div class="flex justify-between items-end font-mono text-[11px] text-slate-300 drop-shadow">
+                  <div class="bg-black/50 px-2.5 py-1 rounded border border-[#14364c]">
+                    STATUS: <span id="preview-video-status" class="text-emerald-400 font-bold">READY</span>
+                  </div>
+                  <div class="bg-black/50 px-2.5 py-1 rounded border border-[#14364c]">
+                    TIME: <span id="preview-video-time" class="text-white font-bold">00:00 / 00:00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Big Play Overlay Button When Paused -->
+              <div id="preview-big-play-overlay" onclick="togglePreviewPlay()" class="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer z-20 transition-opacity">
+                <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 shadow-[0_0_25px_rgba(0,230,118,0.5)] hover:scale-110 transition-transform">
+                  <i data-lucide="play" class="w-9 h-9 ml-1"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Progress Scrub Bar Strip -->
+            <div class="px-4 py-2 bg-[#081824]/95 border-t border-[#14364c] flex items-center gap-3 z-20">
+              <span class="text-[10px] font-mono text-slate-400">SCRUB:</span>
+              <input type="range" id="preview-video-scrubber" min="0" max="100" value="0" class="flex-1 accent-emerald-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+              <span id="preview-scrub-label" class="text-[11px] font-mono text-emerald-400 font-bold w-14 text-right">0%</span>
+            </div>
+          </section>
+
+          <!-- VIEW: LOGS -->
+          <section id="view-logs" class="hidden h-full bg-[#091924]/95 border border-[#14364c] rounded-xl p-4 shadow-lg flex flex-col">
+            <div class="flex items-center justify-between border-b border-[#14364c] pb-3">
+              <div class="flex items-center gap-2">
+                <i data-lucide="file-text" class="w-5 h-5 text-emerald-400"></i>
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100 font-tactical">BATTLEFIELD MANAGEMENT SYSTEM LOGS</h3>
+              </div>
+              <button onclick="clearLogsUI()" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs">CLEAR VIEW</button>
+            </div>
+            <div id="logs-container" class="space-y-2 font-mono text-xs flex-1 overflow-y-auto pr-1 mt-3">
+              <div class="p-2 rounded bg-red-950/40 border-l-4 border-red-500 text-slate-200 flex justify-between">
+                <span>[14:18:02] ALARM: Electro-optical target acquired at Grid 4429. Range 1,200m. Target type: Wheeled Recon.</span>
+                <span class="text-red-400 font-bold">PRIORITY-1</span>
+              </div>
+              <div class="p-2 rounded bg-[#07141d] border-l-4 border-cyan-500 text-slate-200 flex justify-between">
+                <span>[13:56:45] INFO: Full CAN-Bus vehicle diagnostics completed. All 6 ECUs responded normal.</span>
+                <span class="text-cyan-400">SYS</span>
+              </div>
+              <div class="p-2 rounded bg-[#07141d] border-l-4 border-emerald-500 text-slate-200 flex justify-between">
+                <span>[12:43:10] OK: Tactical encrypted mission parameters loaded from Headquarters Command Server.</span>
+                <span class="text-emerald-400">NET</span>
+              </div>
+              <div class="p-2 rounded bg-[#07141d] border-l-4 border-sky-500 text-slate-200 flex justify-between">
+                <span>[11:32:00] COMMS: Direct secure burst packet received on Channel 1 (Brigade Net).</span>
+                <span class="text-sky-400">VHF</span>
+              </div>
+              <div class="p-2 rounded bg-amber-950/40 border-l-4 border-amber-500 text-slate-200 flex justify-between">
+                <span>[10:12:30] WARN: Fuel capacity reached 68% threshold during mountain gradient ascent.</span>
+                <span class="text-amber-400 font-bold">WARN</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW: SETTINGS (Full Real Military Vehicle Cockpit Controls & Calibration) -->
+          <section id="view-settings" class="hidden h-full bg-[#091924]/95 border border-[#14364c] rounded-xl p-3 sm:p-4 shadow-lg flex flex-col justify-between overflow-y-auto">
+            <div class="space-y-3">
+              <!-- Settings Header -->
+              <div class="flex items-center justify-between border-b border-[#14364c] pb-2.5">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="sliders" class="w-5 h-5 text-emerald-400"></i>
+                  <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-100 font-tactical">TACTICAL COCKPIT CONTROLS & ECU CALIBRATION</h3>
+                    <p class="text-[10px] text-[#638497] font-mono">MIL-STD-810H OPERATIONAL BUS CONTROLLERS &bull; ARMADO ALSV 4x4</p>
+                  </div>
+                </div>
+                <button onclick="runFullCanbusDiagnostic()" id="btn-run-diagnostic" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/40 font-mono text-xs flex items-center gap-1.5 transition-colors">
+                  <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                  <span>RUN DIAGNOSTIC</span>
+                </button>
+              </div>
+
+              <!-- 6 REAL TACTICAL VEHICLE DASHBOARD CONTROL CARDS -->
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-xs">
+                
+                <!-- CARD 1: DRIVETRAIN & 4x4 TRANSFER CASE (Electronic Transfer Case Selection) -->
+                <div class="p-3 bg-[#07141d] rounded-lg border border-[#153a52] space-y-2.5">
+                  <div class="flex items-center justify-between border-b border-[#14364c] pb-1.5">
+                    <span class="font-bold text-slate-200 uppercase font-tactical tracking-wider text-sm flex items-center gap-1.5">
+                      <i data-lucide="git-merge" class="w-3.5 h-3.5 text-amber-400"></i>
+                      DRIVETRAIN & TRANSFER CASE
+                    </span>
+                    <span class="text-[10px] font-mono text-amber-400">BORG-WARNER</span>
+                  </div>
+
+                  <!-- 4-Wheel Drive Modes Selector -->
+                  <div>
+                    <div class="text-[10px] text-slate-400 font-mono mb-1.5">ELECTRONIC T-CASE MODE:</div>
+                    <div class="grid grid-cols-4 gap-1">
+                      <button id="btn-drive-2h" onclick="setDriveMode('2h')" class="px-2 py-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-mono text-[10px] border border-slate-700 transition-all">
+                        2H HIGH
+                      </button>
+                      <button id="btn-drive-4h" onclick="setDriveMode('4h')" class="px-2 py-1 rounded bg-amber-950/90 text-amber-300 border border-amber-500 font-mono text-[10px] font-bold shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-all">
+                        4H HIGH
+                      </button>
+                      <button id="btn-drive-4l" onclick="setDriveMode('4l')" class="px-2 py-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-mono text-[10px] border border-slate-700 transition-all">
+                        4L LOW
+                      </button>
+                      <button id="btn-drive-diff_lock" onclick="setDriveMode('diff_lock')" class="px-2 py-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-mono text-[10px] border border-slate-700 transition-all">
+                        E-LOCK
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Speed Governor Slider -->
+                  <div class="pt-1.5 border-t border-[#122e42]">
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="text-slate-300 font-mono text-[11px]">Convoy Speed Governor</span>
+                      <span id="val-speed-gov" class="font-mono text-amber-300 font-bold">110 km/h</span>
+                    </div>
+                    <input type="range" min="40" max="140" value="110" oninput="setSpeedGovernor(this.value)" class="accent-amber-400 w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+                  </div>
+                </div>
+
+                <!-- CARD 2: CTIS (CENTRAL TIRE INFLATION SYSTEM) -->
+                <div class="p-3 bg-[#07141d] rounded-lg border border-[#153a52] space-y-2.5">
+                  <div class="flex items-center justify-between border-b border-[#14364c] pb-1.5">
+                    <span class="font-bold text-slate-200 uppercase font-tactical tracking-wider text-sm flex items-center gap-1.5">
+                      <i data-lucide="disc" class="w-3.5 h-3.5 text-emerald-400"></i>
+                      CTIS TIRE INFLATION
+                    </span>
+                    <span id="ctis-live-psi-display" class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/50 font-mono font-bold text-[10px]">
+                      32 PSI
+                    </span>
+                  </div>
+
+                  <div>
+                    <div class="text-[10px] text-slate-400 font-mono mb-1.5">PRESET TERRAIN TARGET:</div>
+                    <div class="grid grid-cols-2 gap-1.5">
+                      <button id="btn-ctis-highway" onclick="setCtisPressure('highway')" class="px-2 py-1 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-400 font-mono text-[11px] font-bold shadow-[0_0_8px_rgba(0,230,118,0.3)] transition-all">
+                        HIGHWAY (36 PSI)
+                      </button>
+                      <button id="btn-ctis-cross_country" onclick="setCtisPressure('cross_country')" class="px-2 py-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-mono text-[11px] border border-slate-700 transition-all">
+                        CROSS-COUNTRY (28)
+                      </button>
+                      <button id="btn-ctis-sand_mud" onclick="setCtisPressure('sand_mud')" class="px-2 py-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-mono text-[11px] border border-slate-700 transition-all">
+                        SAND / MUD (20)
+                      </button>
+                      <button id="btn-ctis-emergency" onclick="setCtisPressure('emergency')" class="px-2 py-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-mono text-[11px] border border-slate-700 transition-all">
+                        EMERGENCY (14)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="pt-1.5 border-t border-[#122e42] flex items-center justify-between text-[11px] font-mono text-slate-300">
+                    <span>Compressor Pressure:</span>
+                    <span class="text-emerald-400 font-bold">120 PSI (AIR RESERVOIR FULL)</span>
+                  </div>
+                </div>
+
+                <!-- CARD 3: COMBAT LIGHTING & BLACKOUT MARKERS -->
+                <div class="p-3 bg-[#07141d] rounded-lg border border-[#153a52] space-y-2.5">
+                  <div class="flex items-center justify-between border-b border-[#14364c] pb-1.5">
+                    <span class="font-bold text-slate-200 uppercase font-tactical tracking-wider text-sm flex items-center gap-1.5">
+                      <i data-lucide="eye" class="w-3.5 h-3.5 text-cyan-400"></i>
+                      COMBAT LIGHTING & BLACKOUT
+                    </span>
+                    <span class="text-[10px] font-mono text-cyan-400">STANAG 4381</span>
+                  </div>
+
+                  <div>
+                    <div class="text-[10px] text-slate-400 font-mono mb-1.5">EXTERIOR OPTICAL EMISSION:</div>
+                    <div class="grid grid-cols-3 gap-1">
+                      <button id="btn-light-normal" onclick="setLightingBlackout('normal')" class="px-1.5 py-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-mono text-[10px] border border-slate-700 transition-all">
+                        COMBAT WHITE
+                      </button>
+                      <button id="btn-light-ir_blackout" onclick="setLightingBlackout('ir_blackout')" class="px-1.5 py-1 rounded bg-cyan-950/90 text-cyan-300 border border-cyan-400 font-mono text-[10px] font-bold shadow-[0_0_8px_rgba(6,182,212,0.3)] transition-all">
+                        IR BLACKOUT
+                      </button>
+                      <button id="btn-light-stealth_off" onclick="setLightingBlackout('stealth_off')" class="px-1.5 py-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-400 font-mono text-[10px] border border-slate-700 transition-all">
+                        FULL DARK
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- NVG HUD Green Phosphor Filter Toggle -->
+                  <div class="pt-1.5 border-t border-[#122e42] flex justify-between items-center">
+                    <div>
+                      <div class="text-slate-200 font-medium">Night Vision Phosphor (NVG)</div>
+                      <div class="text-[10px] text-slate-500">Filters UI into green night-vision palette</div>
+                    </div>
+                    <button onclick="toggleNightFilter()" class="px-2 py-1 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/50 font-mono text-[11px] transition-colors">
+                      TOGGLE NVG
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CARD 4: SUSPENSION & ACTIVE AIR RIDE HEIGHT -->
+                <div class="p-3 bg-[#07141d] rounded-lg border border-[#153a52] space-y-2.5">
+                  <div class="flex items-center justify-between border-b border-[#14364c] pb-1.5">
+                    <span class="font-bold text-slate-200 uppercase font-tactical tracking-wider text-sm flex items-center gap-1.5">
+                      <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-emerald-400"></i>
+                      SUSPENSION & RIDE HEIGHT
+                    </span>
+                    <span id="val-suspension-height" class="font-mono text-emerald-400 font-bold text-xs">
+                      280 mm
+                    </span>
+                  </div>
+
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="text-slate-300 text-[11px]">Ground Clearance Control</span>
+                      <span class="text-[10px] font-mono text-slate-400">220mm (LOW) - 360mm (OBSTACLE)</span>
+                    </div>
+                    <input type="range" min="220" max="360" value="280" oninput="adjustSuspensionHeight(this.value)" class="accent-emerald-400 w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+                  </div>
+
+                  <div class="pt-1.5 border-t border-[#122e42] grid grid-cols-2 gap-2 text-[11px] font-mono">
+                    <div class="p-1.5 rounded bg-slate-900/60 border border-slate-800">
+                      <div class="text-slate-400 text-[10px]">WHEEL ARTICULATION:</div>
+                      <div class="text-emerald-400 font-bold">240mm TRAVEL</div>
+                    </div>
+                    <div class="p-1.5 rounded bg-slate-900/60 border border-slate-800">
+                      <div class="text-slate-400 text-[10px]">FORDING DEPTH:</div>
+                      <div class="text-cyan-400 font-bold">1,000mm (PREPARED)</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CARD 5: WEAPONS SYSTEM & ACTIVE COUNTERMEASURES -->
+                <div class="p-3 bg-[#07141d] rounded-lg border border-[#153a52] space-y-2.5">
+                  <div class="flex items-center justify-between border-b border-[#14364c] pb-1.5">
+                    <span class="font-bold text-slate-200 uppercase font-tactical tracking-wider text-sm flex items-center gap-1.5">
+                      <i data-lucide="crosshair" class="w-3.5 h-3.5 text-red-400"></i>
+                      WEAPONS & COUNTERMEASURES
+                    </span>
+                    <span id="val-master-arm" class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono font-bold text-[10px] border border-slate-600">
+                      SAFE (INHIBITED)
+                    </span>
+                  </div>
+
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <div class="text-slate-200 font-medium">Master Arm Switch</div>
+                      <div class="text-[10px] text-slate-500">Authorizes 7.62mm / 12.7mm RCWS solenoid</div>
+                    </div>
+                    <button onclick="toggleMasterArm()" id="btn-toggle-master-arm" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-[11px] font-bold border border-slate-600 transition-colors">
+                      ARM SYSTEM
+                    </button>
+                  </div>
+
+                  <!-- Smoke Screen Granade Salvo Trigger -->
+                  <div class="pt-1.5 border-t border-[#122e42] flex justify-between items-center">
+                    <div>
+                      <div class="text-amber-300 font-medium">81mm Smoke Grenades</div>
+                      <div class="text-[10px] text-slate-500">4x Forward Multiband Aerosol Tubes</div>
+                    </div>
+                    <button onclick="triggerSmokeScreen()" class="px-2.5 py-1 rounded bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-500/50 font-mono text-[11px] font-bold transition-colors">
+                      FIRE SMOKE
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CARD 6: DISPLAY, SENSORS & SECURE AVIONICS -->
+                <div class="p-3 bg-[#07141d] rounded-lg border border-[#153a52] space-y-2.5">
+                  <div class="flex items-center justify-between border-b border-[#14364c] pb-1.5">
+                    <span class="font-bold text-slate-200 uppercase font-tactical tracking-wider text-sm flex items-center gap-1.5">
+                      <i data-lucide="cpu" class="w-3.5 h-3.5 text-cyan-400"></i>
+                      DISPLAY & AVIONICS SENSORS
+                    </span>
+                    <span class="text-[10px] font-mono text-emerald-400">CAN 2.0B BUS</span>
+                  </div>
+
+                  <!-- Backlight Dimmer -->
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="text-slate-300 text-[11px]">Rugged LCD Backlight</span>
+                      <span id="val-backlight-percent" class="font-mono text-cyan-300 font-bold">90%</span>
+                    </div>
+                    <input type="range" min="20" max="100" value="90" oninput="setBacklightIntensity(this.value)" class="accent-cyan-400 w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+                  </div>
+
+                  <!-- Telemetry Jitter Simulation Toggle -->
+                  <div class="pt-1.5 border-t border-[#122e42] flex justify-between items-center">
+                    <div>
+                      <div class="text-slate-200 font-medium">Live Telemetry Simulation Jitter</div>
+                      <div class="text-[10px] text-slate-500">Micro engine & heading oscillations</div>
+                    </div>
+                    <input type="checkbox" id="telemetry-sim-toggle" checked class="w-4 h-4 accent-emerald-500 cursor-pointer">
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Terminal Hardware Status Footer -->
+            <div class="p-2.5 rounded-lg bg-[#07141d] border border-[#14364c] flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+              <div class="flex items-center gap-2 text-slate-300">
+                <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+                <span>HARDWARE: MIL-STD-810H RUGGED BMS TERMINAL | HW ID: IA-IFV-8842</span>
+              </div>
+              <div class="text-emerald-400 font-semibold">
+                ALL 14 SENSORS CALIBRATED & VERIFIED
+              </div>
+            </div>
+          </section>
+
+        </main>
+
+        <!-- BOTTOM TACTICAL NAVIGATION BAR (7 Tabs: Home, Map, Waypoints, Routes, Camera, Logs, Settings) -->
+        <footer class="bg-[#050f16] border-t border-[#122e42] p-2 sm:p-2.5">
+          <nav class="grid grid-cols-7 gap-1 sm:gap-2">
+            
+            <!-- Tab 1: Home (Default Active in photo with green highlight) -->
+            <button id="nav-home" onclick="switchTab('home')" class="flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 rounded-lg border border-emerald-500/80 bg-[#07281f] text-emerald-400 transition-all">
+              <i data-lucide="home" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400"></i>
+              <span class="text-[10px] sm:text-[11px] font-semibold tracking-wide mt-1">Home</span>
+            </button>
+
+            <!-- Tab 2: Navigation -->
+            <button id="nav-map" onclick="switchTab('map')" class="flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 rounded-lg border border-transparent hover:border-[#14364c] hover:bg-[#091a27] text-slate-400 hover:text-slate-200 transition-all">
+              <i data-lucide="navigation" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+              <span class="text-[10px] sm:text-[11px] font-semibold tracking-wide mt-1">Navigation</span>
+            </button>
+
+            <!-- Tab 3: Waypoints -->
+            <button id="nav-waypoints" onclick="switchTab('waypoints')" class="flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 rounded-lg border border-transparent hover:border-[#14364c] hover:bg-[#091a27] text-slate-400 hover:text-slate-200 transition-all">
+              <i data-lucide="map-pin" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+              <span class="text-[10px] sm:text-[11px] font-semibold tracking-wide mt-1">Waypoints</span>
+            </button>
+
+            <!-- Tab 4: Preview (Replaces Routes: Tactical Mission Video Playback) -->
+            <button id="nav-routes" onclick="switchTab('routes')" class="flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 rounded-lg border border-transparent hover:border-[#14364c] hover:bg-[#091a27] text-slate-400 hover:text-slate-200 transition-all">
+              <i data-lucide="play-circle" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+              <span class="text-[10px] sm:text-[11px] font-semibold tracking-wide mt-1">Preview</span>
+            </button>
+
+            <!-- Tab 5: Camera -->
+            <button id="nav-camera" onclick="switchTab('camera')" class="flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 rounded-lg border border-transparent hover:border-[#14364c] hover:bg-[#091a27] text-slate-400 hover:text-slate-200 transition-all">
+              <i data-lucide="camera" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+              <span class="text-[10px] sm:text-[11px] font-semibold tracking-wide mt-1">Camera</span>
+            </button>
+
+            <!-- Tab 6: Logs -->
+            <button id="nav-logs" onclick="switchTab('logs')" class="flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 rounded-lg border border-transparent hover:border-[#14364c] hover:bg-[#091a27] text-slate-400 hover:text-slate-200 transition-all">
+              <i data-lucide="file-text" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+              <span class="text-[10px] sm:text-[11px] font-semibold tracking-wide mt-1">Logs</span>
+            </button>
+
+            <!-- Tab 7: Settings -->
+            <button id="nav-settings" onclick="switchTab('settings')" class="flex flex-col items-center justify-center py-1.5 sm:py-2 px-1 rounded-lg border border-transparent hover:border-[#14364c] hover:bg-[#091a27] text-slate-400 hover:text-slate-200 transition-all">
+              <i data-lucide="wrench" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+              <span class="text-[10px] sm:text-[11px] font-semibold tracking-wide mt-1">Settings</span>
+            </button>
+
+          </nav>
+        </footer>
+
+      </div>
+
+      <!-- RIGHT PHYSICAL HARDWARE BUTTONS (PWR, +, -, Night Vision, Shutter as in image) -->
+      <div id="right-physical-bar" class="hidden md:flex flex-col justify-center items-center gap-3 py-6 px-1.5 bg-[#10141a] rounded-xl border border-[#232b35] shadow-inner">
+        <!-- Physical Power Button with 'PWR' engraved -->
+        <button onclick="toggleScreenPower()" title="Master Display Power" class="rugged-btn w-11 h-11 rounded-lg flex flex-col items-center justify-center text-red-400 font-mono text-[10px] font-bold">
+          <i data-lucide="power" class="w-4 h-4 mb-0.5"></i>
+          <span>PWR</span>
+        </button>
+        <!-- Plus Button (Zoom In / Brightness Up) -->
+        <button onclick="adjustZoom(1)" title="Zoom In / Gain Up" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center text-slate-200 font-mono text-xl font-bold">
+          +
+        </button>
+        <!-- Minus Button (Zoom Out / Brightness Down) -->
+        <button onclick="adjustZoom(-1)" title="Zoom Out / Gain Down" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center text-slate-200 font-mono text-xl font-bold">
+          -
+        </button>
+        <!-- Night Vision / IR Toggle Button -->
+        <button onclick="switchTab('camera')" title="FLIR Optic Toggle" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-400">
+          <i data-lucide="aperture" class="w-5 h-5 text-cyan-400"></i>
+        </button>
+        <!-- Camera Shutter / Target Snapshot -->
+        <button onclick="captureTargetSnapshot()" title="Capture Battlefield Still" class="rugged-btn w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-amber-400">
+          <i data-lucide="camera" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Tablet Bottom Rim Hardware Screws & Speaker Grille Details -->
+    <div class="mt-3 hidden md:flex items-center justify-center gap-12 text-slate-600">
+      <div class="flex gap-1.5">
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+      </div>
+      <div class="w-24 h-1.5 rounded bg-[#10141a] border border-[#232b35]"></div>
+      <div class="flex gap-1.5">
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+      </div>
+    </div>
+
+  </div>
+  <!-- /#frame-viewport-stage -->
+
+  <!-- FULL-FRAME 3D VEHICLE INSPECTION MODAL (Double-click 360° Tactical Viewport) -->
+  <div id="vehicle-3d-modal" class="fixed inset-0 z-50 bg-[#030a0f]/95 backdrop-blur-md flex flex-col hidden transition-opacity duration-300">
+    <!-- Top HUD Header -->
+    <div class="px-4 py-3 bg-[#071622]/95 border-b border-[#14394f] flex items-center justify-between shadow-xl">
+      <div class="flex items-center gap-3">
+        <div class="p-2 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-400">
+          <i data-lucide="shield" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm sm:text-base font-extrabold uppercase tracking-widest text-white font-tactical">3D VEHICLE TACTICAL INSPECTION</h2>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-500/50 animate-pulse">360° ACTIVE</span>
+          </div>
+          <p class="text-[11px] font-mono text-[#628498]">INDIAN ARMY ARMOURED FLEET &bull; STANAG L-II COMPLIANT &bull; CAN-BUS DIAGNOSTICS</p>
+        </div>
+      </div>
+
+      <!-- Controls & Close Button -->
+      <div class="flex items-center gap-2">
+        <button onclick="toggle3dRotate()" id="btn-modal-rotate" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 font-mono text-xs border border-cyan-500/40 flex items-center gap-1.5 transition-all">
+          <span>⟳ AUTO ROTATE</span>
+        </button>
+        <button onclick="toggle3dWireframe()" id="btn-modal-wire" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 font-mono text-xs border border-emerald-500/40 flex items-center gap-1.5 transition-all">
+          <span>GRID WIREFRAME</span>
+        </button>
+        <button onclick="reset3dCameraView()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs border border-slate-600 flex items-center gap-1.5 transition-all">
+          <span>RESET VIEW</span>
+        </button>
+        <button onclick="close3dVehicleModal()" class="px-3.5 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 font-mono text-xs border border-red-500/60 flex items-center gap-1.5 transition-all">
+          <span>✕ CLOSE (ESC)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main 3D Modal Viewport Stage with Overlaid Tactical HUD -->
+    <div class="relative flex-1 w-full h-full overflow-hidden bg-[#040b10] flex items-center justify-center">
+      <!-- Full Frame Three.js Canvas Container -->
+      <div id="vehicle-3d-modal-wrapper" class="w-full h-full relative flex items-center justify-center">
+        <!-- Canvas will be positioned here during modal mode -->
+      </div>
+
+      <!-- Left Telemetry Floating Card -->
+      <div class="absolute top-4 left-4 w-72 bg-[#071622]/90 border border-[#14394f] rounded-xl p-3.5 shadow-2xl backdrop-blur-sm pointer-events-none space-y-2.5 font-mono text-xs select-none">
+        <div class="text-emerald-400 font-bold tracking-wider flex items-center gap-2 border-b border-[#14364c] pb-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          POWERTRAIN & ARMOUR SPECS
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>CHASSIS:</span>
+          <span class="text-white font-bold">TACTICAL 4x4 ALSV</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>ENGINE:</span>
+          <span class="text-white font-bold">3.2L Multi-Fuel Turbo</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>POWER:</span>
+          <span class="text-cyan-400 font-bold">215 HP @ 3600 RPM</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>TORQUE:</span>
+          <span class="text-cyan-400 font-bold">500 Nm @ 1800 RPM</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>BALLISTIC:</span>
+          <span class="text-emerald-400 font-bold">STANAG Level II</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>PAYLOAD:</span>
+          <span class="text-amber-400 font-bold">1,000 kg / 4+2 Pax</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>GRADIENT CAP:</span>
+          <span class="text-white font-bold">60% Max Slope</span>
+        </div>
+      </div>
+
+      <!-- Right Real-Time Diagnostics Floating Card -->
+      <div class="absolute top-4 right-4 w-72 bg-[#071622]/90 border border-[#14394f] rounded-xl p-3.5 shadow-2xl backdrop-blur-sm pointer-events-none space-y-2.5 font-mono text-xs select-none">
+        <div class="text-cyan-400 font-bold tracking-wider flex items-center gap-2 border-b border-[#14364c] pb-1.5">
+          <i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i>
+          LIVE SENSOR TELEMETRY
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>BUS VOLTAGE:</span>
+          <span class="text-emerald-400 font-bold">28.6 V (STABLE)</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>TIRE PRESSURE (CTIS):</span>
+          <span class="text-emerald-400 font-bold">32 PSI ALL WHEELS</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>OIL PRESSURE:</span>
+          <span class="text-white font-bold">4.2 BAR</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>PITCH / ROLL:</span>
+          <span class="text-white font-bold">+2.1° / -0.8°</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>DRIVE MODE:</span>
+          <span class="text-amber-400 font-bold">4WD HIGH LOCKED</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>WINCH:</span>
+          <span class="text-slate-400 font-bold">STANDBY (12,000 LB)</span>
+        </div>
+      </div>
+
+      <!-- Bottom Drag & Interaction Instructions Floating Pill -->
+      <div class="absolute bottom-5 bg-[#061219]/90 border border-[#14394f] px-4 py-2 rounded-full text-xs font-mono text-slate-300 shadow-xl pointer-events-none flex items-center gap-3">
+        <span class="flex items-center gap-1.5 text-cyan-400"><i data-lucide="mouse-pointer" class="w-3.5 h-3.5"></i> LEFT CLICK + DRAG: 360° ORBIT</span>
+        <span class="text-slate-600">&bull;</span>
+        <span class="flex items-center gap-1.5 text-emerald-400"><i data-lucide="move" class="w-3.5 h-3.5"></i> SCROLL: ZOOM IN/OUT</span>
+        <span class="text-slate-600">&bull;</span>
+        <span class="text-[#7292a4]">PRESS ESC TO RETURN</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast Modal Box (NO alert() used) -->
+  <div id="tactical-toast" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-[#0b1d28] border-2 border-emerald-500 rounded-xl px-4 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.9)] flex items-center gap-3">
+      <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400 shrink-0" id="toast-icon"></i>
+      <div>
+        <div class="text-xs font-bold text-white font-tactical tracking-wider uppercase" id="toast-title">TACTICAL COMMAND ALERT</div>
+        <div class="text-[11px] text-slate-300 font-mono" id="toast-msg">Transmission acknowledged.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular Tactical Terminal Scripts (Non-blocking & Lazy Loaded) -->
+  <script defer src="js/audio.js"></script>
+  <script defer src="js/telemetry.js"></script>
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="js/modules/map2d3d.js"></script>
+  <script defer src="js/modules/flir.js"></script>
+  <script defer src="js/modules/vehicle3d.js"></script>
+  <script defer src="js/modules/emergencySos.js"></script>
+  <script defer src="js/app.js"></script>
+</body>
+</html>

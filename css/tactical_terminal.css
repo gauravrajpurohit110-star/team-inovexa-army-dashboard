@@ -1,0 +1,322 @@
+:root {
+      --bg-terminal: #07131b;
+      --card-bg: rgba(11, 28, 41, 0.88);
+      --card-border: #15374d;
+      --card-border-glow: rgba(0, 230, 118, 0.15);
+      --tac-green: #00e676;
+      --tac-green-glow: rgba(0, 230, 118, 0.4);
+      --tac-cyan: #38bdf8;
+      --tac-amber: #f59e0b;
+      --tac-red: #ef4444;
+      --tac-muted: #648293;
+      --chassis-dark: #12161b;
+      --chassis-metal: #1f252d;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f14;
+      color: #e2e8f0;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    .font-tactical {
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    /* Rugged Bezel Hex Bolts */
+    .hex-bolt {
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle at 35% 35%, #4a5568, #1a202c);
+      border-radius: 50%;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.8);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hex-bolt::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #0f1319;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    }
+
+    /* Rugged chassis stippled texture */
+    .chassis-surface {
+      background-color: #171c23;
+      background-image: 
+        radial-gradient(#26303d 10%, transparent 11%),
+        radial-gradient(#26303d 10%, transparent 11%);
+      background-size: 8px 8px;
+      background-position: 0 0, 4px 4px;
+    }
+
+    /* Tactical display scanline overlay */
+    .crt-overlay {
+      position: relative;
+    }
+    .crt-overlay::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      z-index: 20;
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    /* Glowing LED Indicator */
+    .status-dot-pulse {
+      box-shadow: 0 0 8px currentColor;
+      animation: pulseGlow 2.5s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.65; transform: scale(0.92); }
+    }
+
+    /* Custom progress bar striping */
+    .tac-progress-track {
+      background-color: #0b1a24;
+      border: 1px solid #14354b;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.7);
+    }
+    .tac-progress-bar {
+      background-color: #00e676;
+      box-shadow: 0 0 10px rgba(0, 230, 118, 0.6);
+      background-image: linear-gradient(90deg, #00d26a, #00ff88);
+    }
+
+    /* Segmented Look for Progress Bars */
+    .segmented-bar {
+      position: relative;
+      background-size: 8px 100%;
+      background-image: linear-gradient(to right, transparent 6px, #07131b 6px);
+    }
+
+    /* Tactical Hardware Physical Button */
+    .rugged-btn {
+      background: linear-gradient(180deg, #2a333e 0%, #171d24 100%);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 -2px 3px rgba(0,0,0,0.6);
+      transition: all 0.1s ease;
+    }
+    .rugged-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    .rugged-btn.active {
+      border-color: #00e676;
+      box-shadow: 0 0 12px rgba(0, 230, 118, 0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+    }
+
+    /* Smooth custom scrollbars */
+    
+    /* Constant frame & viewport size across all tabs */
+    #tab-viewport {
+      height: 520px;
+      min-height: 520px;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #081520;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #19405c;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00e676;
+    }
+
+    /* Radar sweep animation */
+    @keyframes radarSweep {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .radar-sweep-line {
+      animation: radarSweep 4s linear infinite;
+      transform-origin: 50% 50%;
+    }
+
+/* ------------------------------------------------------------- */
+/* ------------------------------------------------------------- */
+/* ------------------------------------------------------------- */
+/* ------------------------------------------------------------- */
+/* TACTICAL 2D / 3D MAP & LEAFLET STYLING (FULL-BLEED UPRIGHT)  */
+/* ------------------------------------------------------------- */
+.map-stage-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  perspective: 1000px;
+}
+
+#tactical-map-viewport {
+  width: 100%;
+  height: 100%;
+  background: #040d12;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: 50% 65%;
+}
+
+/* 3D Mode: Forward pitch only (NO diagonal Z-rotation!) */
+.map-3d-perspective #tactical-map-viewport {
+  transform: rotateX(44deg) scale(1.18);
+  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.95);
+}
+
+.map-3d-perspective::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(6, 18, 25, 0.95) 0%, rgba(6, 18, 25, 0.5) 60%, transparent 100%);
+  pointer-events: none;
+  z-index: 390;
+}
+
+/* Vibrant Hypsometric Color Mapping & Contour Blend */
+.topo-contour-blend {
+  mix-blend-mode: multiply !important;
+}
+
+.topo-color-active .leaflet-tile-pane {
+  filter: saturate(110%) contrast(105%);
+}
+
+.satellite-active .leaflet-tile-pane {
+  filter: contrast(110%) brightness(104%) saturate(115%);
+}
+
+/* Custom Leaflet Dark Skin & Popups */
+.leaflet-container {
+  background-color: #040d12 !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+
+.tactical-vehicle-marker-wrapper,
+.tactical-hostile-marker,
+.tactical-friendly-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Synchronized Dual Video Split View */
+.optic-split-active #optic-video-camera {
+  width: 50% !important;
+  right: auto !important;
+  left: 0 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  border-right: 2px solid #00e676;
+}
+
+.optic-split-active #optic-video-lidar {
+  width: 50% !important;
+  left: 50% !important;
+  right: 0 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* =========================================================
+   EMERGENCY SOS SPACE-BAR OVERHEAD CONSOLE & HAND ANIMATIONS
+   ========================================================= */
+
+/* Spacebar Hold Key Hint HUD in Top Bar */
+.sos-key-pill {
+  transition: all 0.2s ease;
+}
+.sos-key-pill.active-charging {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+}
+
+/* Whole Frame Upside Shift Container */
+#frame-viewport-stage {
+  will-change: transform;
+  transition: transform 0.1s linear;
+}
+
+/* Overhead SOS Console Hatch Hatch Pattern */
+.hazard-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    #ef4444,
+    #ef4444 12px,
+    #18181b 12px,
+    #18181b 24px
+  );
+}
+
+/* Physical SOS Push Button 3D Styling */
+.sos-physical-switch {
+  box-shadow: 0 12px 25px rgba(239, 68, 68, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.4), inset 0 -4px 6px rgba(0, 0, 0, 0.6);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.sos-physical-switch:active, .sos-switch-pressed {
+  transform: translateY(6px) scale(0.96) !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.8), inset 0 4px 10px rgba(0, 0, 0, 0.8) !important;
+  background-color: #dc2626 !important;
+}
+
+/* Warning Strobe & Siren Flash */
+@keyframes sosSirenFlash {
+  0%, 100% {
+    background-color: rgba(220, 38, 38, 0.18);
+    box-shadow: inset 0 0 50px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    background-color: rgba(220, 38, 38, 0.02);
+    box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.1);
+  }
+}
+.sos-active-alarm-strobe {
+  animation: sosSirenFlash 0.9s infinite alternate ease-in-out;
+}
+
+/* Pulse Glow for SOS Alert Banner */
+@keyframes alertPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), inset 0 0 12px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(239, 68, 68, 0.95), inset 0 0 20px rgba(239, 68, 68, 0.6);
+  }
+}
+.sos-banner-glow {
+  animation: alertPulseGlow 1.2s infinite ease-in-out;
+}
+
