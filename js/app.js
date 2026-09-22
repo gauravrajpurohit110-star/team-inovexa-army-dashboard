@@ -267,6 +267,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.lucide.createIcons();
   }
 
+  // Handle initial tab from URL hash (e.g. #routes, #map, #camera, #settings)
+  const hashTab = window.location.hash ? window.location.hash.replace('#', '') : '';
+  if (tabs.includes(hashTab)) {
+    switchTab(hashTab);
+  }
+
   // Initialize Tactical Video Preview Event Listeners
   initPreviewVideoEvents();
 
