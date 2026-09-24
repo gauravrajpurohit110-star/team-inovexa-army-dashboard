@@ -228,7 +228,11 @@ function setDriveMode(mode) {
     'diff_lock': '4WD LOW + FRONT & REAR AXLE E-LOCKERS ENGAGED'
   };
 
-  playBeep(mode === 'diff_lock' ? 620 : 850, 0.05);
+  if (window.playPneumaticActuatorSound) {
+    window.playPneumaticActuatorSound(false);
+  } else {
+    playBeep(mode === 'diff_lock' ? 620 : 850, 0.05);
+  }
   showToast('DRIVETRAIN SHIFT', titles[mode] || mode, mode === 'diff_lock' ? 'warn' : 'info');
 }
 
@@ -251,7 +255,11 @@ function setCtisPressure(mode) {
   const psiDisplay = document.getElementById('ctis-live-psi-display');
   if (psiDisplay) psiDisplay.textContent = `${targetPsi} PSI`;
 
-  playBeep(900, 0.05);
+  if (window.playPneumaticActuatorSound) {
+    window.playPneumaticActuatorSound(mode === 'emergency' || mode === 'sand_mud');
+  } else {
+    playBeep(900, 0.05);
+  }
   showToast('CTIS AIR COMPRESSOR', `Target Inflation: ${targetPsi} PSI (${mode.toUpperCase().replace('_', ' ')})`, 'info');
 }
 
@@ -274,7 +282,11 @@ function setLightingBlackout(mode) {
     'stealth_off': 'Total Emissive Blackout (All Exterior & Interior Lights Cut)'
   };
 
-  playBeep(780, 0.05);
+  if (window.playTacticalClick) {
+    window.playTacticalClick();
+  } else {
+    playBeep(780, 0.05);
+  }
   showToast('LIGHTING MASTER SWITCH', descriptions[mode] || mode, mode === 'stealth_off' ? 'warn' : 'info');
 }
 

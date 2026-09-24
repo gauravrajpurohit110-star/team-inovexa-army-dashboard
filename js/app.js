@@ -10,7 +10,8 @@ window.currentTab = 'home';
 function switchTab(tabId) {
   if (!tabs.includes(tabId)) return;
   window.currentTab = tabId;
-  playBeep(750, 0.04);
+  if (window.playTacticalClick) window.playTacticalClick();
+  else if (window.playBeep) window.playBeep(750, 0.04);
 
   // Hide all view sections
   tabs.forEach(t => {

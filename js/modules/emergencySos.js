@@ -103,8 +103,10 @@ function startSosHoldSequence() {
     statusBanner.textContent = 'SAFETY INTERLOCK CHARGING // COSPAS-SARSAT 406.025 MHz';
   }
 
-  // Initial tactile chirp
-  if (window.playBeep) window.playBeep(420, 0.06, 'sine');
+  // Initial tactical spool-up charge sound
+  if (window.startInterlockAudioCharge) {
+    window.startInterlockAudioCharge();
+  }
 
   if (spacebarRaf) cancelAnimationFrame(spacebarRaf);
   spacebarRaf = requestAnimationFrame(updateSosHoldProgress);
@@ -150,12 +152,9 @@ function updateSosHoldProgress(currentTime) {
     if (statusBanner) statusBanner.textContent = 'RELEASE SPACEBAR TO ABORT IMMEDIATELY';
   }
 
-  // 5. Tactile Frequency Rising Chirps every 140ms
-  if (currentTime - lastChargeToneTime >= 140) {
-    lastChargeToneTime = currentTime;
-    if (window.playInterlockChargeTone) {
-      window.playInterlockChargeTone(progress);
-    }
+  // 5. Update Active Charging Audio Modulation
+  if (window.updateInterlockAudioCharge) {
+    window.updateInterlockAudioCharge(progress);
   }
 
   // 6. 2.0 Seconds Reached: Trigger Combat Distress Mode
@@ -198,8 +197,10 @@ function cancelSosHoldSequence() {
     ring.style.strokeDashoffset = `${CHRONO_CIRCUMFERENCE}`;
   }
 
-  // Soft de-escalation tone
-  if (window.playBeep) window.playBeep(320, 0.08, 'sine');
+  // Auditory Abort / De-escalation disarm tone
+  if (window.abortInterlockAudioCharge) {
+    window.abortInterlockAudioCharge();
+  }
 
   // Fade HUD away
   setTimeout(() => {
@@ -238,6 +239,11 @@ function triggerEmergencySosSuccess() {
     setTimeout(() => {
       chassis.classList.remove('tactical-bloom-trigger');
     }, 400);
+  }
+
+  // Heavy Tactical Trigger Impact Sound (sub-bass punch + satellite ignition + modem burst)
+  if (window.playDistressTriggerImpact) {
+    window.playDistressTriggerImpact();
   }
 
   // 2. Dock Integrated Emergency Command Strip
@@ -279,6 +285,9 @@ function triggerEmergencySosSuccess() {
     if (burstEl && sosSecondsElapsed % 15 === 0) {
       const burstNum = Math.floor(sosSecondsElapsed / 15) + 1;
       burstEl.textContent = `#${String(burstNum).padStart(2, '0')}`;
+      if (window.playSatelliteBurstChime) {
+        window.playSatelliteBurstChime();
+      }
     }
   }, 1000);
 
@@ -401,8 +410,10 @@ function dismissEmergencySos() {
     silenceBtn.classList.remove('bg-amber-950/80', 'border-amber-600', 'text-amber-300');
   }
 
-  // Feedback tone & Toast
-  if (window.playBeep) window.playBeep(640, 0.08, 'sine');
+  // De-escalation resolution chord feedback & Toast
+  if (window.playStandDownTone) {
+    window.playStandDownTone();
+  }
   if (window.showToast) {
     window.showToast('DISTRESS STAND DOWN', 'Emergency beacon deactivated. System returned to tactical operational ready.', 'info');
   }
