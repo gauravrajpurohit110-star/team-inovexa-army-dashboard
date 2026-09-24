@@ -774,6 +774,52 @@ function createTacticalContacts() {
   `, { className: 'tactical-leaflet-popup' });
 }
 
+let distressBeaconCircle = null;
+let distressRescueVector = null;
+
+function triggerMapDistressBeacon() {
+  if (!tacticalMap) return;
+  clearMapDistressBeacon();
+
+  const vPos = [currentLat, currentLon];
+  const qrfPos = [34.2045, 77.5742];
+
+  distressBeaconCircle = L.circle(vPos, {
+    radius: 420,
+    color: '#ef4444',
+    fillColor: '#dc2626',
+    fillOpacity: 0.28,
+    weight: 2,
+    dashArray: '5, 6',
+    className: 'sos-distress-beacon-ring'
+  }).addTo(tacticalMap);
+
+  distressRescueVector = L.polyline([vPos, qrfPos], {
+    color: '#f59e0b',
+    weight: 2.5,
+    dashArray: '6, 6',
+    opacity: 0.95
+  }).addTo(tacticalMap);
+
+  distressRescueVector.bindTooltip('QRF RESCUE VECTOR (1.8 KM // ETA: 4 MIN)', {
+    permanent: true,
+    direction: 'center',
+    className: 'tactical-qrf-tooltip'
+  });
+}
+
+function clearMapDistressBeacon() {
+  if (!tacticalMap) return;
+  if (distressBeaconCircle) {
+    tacticalMap.removeLayer(distressBeaconCircle);
+    distressBeaconCircle = null;
+  }
+  if (distressRescueVector) {
+    tacticalMap.removeLayer(distressRescueVector);
+    distressRescueVector = null;
+  }
+}
+
 // Global Exports
 window.initTacticalMap = initTacticalMap;
 window.setMapLayer = setMapLayer;
@@ -784,3 +830,5 @@ window.showVehicleMapPopup = showVehicleMapPopup;
 window.invalidateMapSize = invalidateMapSize;
 window.toggleDrivingSimulation = toggleDrivingSimulation;
 window.toggleNavigationOrientation = toggleNavigationOrientation;
+window.triggerMapDistressBeacon = triggerMapDistressBeacon;
+window.clearMapDistressBeacon = clearMapDistressBeacon;

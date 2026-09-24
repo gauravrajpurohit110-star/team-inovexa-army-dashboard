@@ -50,107 +50,8 @@
     </div>
   </div>
 
-  <!-- STAGE WRAPPER FOR FRAME SHIFT ANIMATION -->
+  <!-- STAGE WRAPPER -->
   <div id="frame-viewport-stage" class="w-full max-w-[1440px] flex flex-col items-center justify-center relative">
-
-    <!-- OVERHEAD ROOF CONSOLE: EMERGENCY SOS BUTTON (Revealed when frame shifts upside) -->
-    <div id="overhead-sos-console" class="w-full max-w-[1380px] h-[340px] bg-[#0c1015] border-4 border-[#252e3b] rounded-[24px] mb-3 shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden relative hidden flex-col items-center justify-between p-4 select-none">
-      
-      <!-- Top Roof Console Header Bar -->
-      <div class="w-full flex items-center justify-between px-3 py-1.5 bg-[#121820] border border-[#232f3e] rounded-xl shadow-inner text-xs font-mono">
-        <div class="flex items-center gap-2 text-red-400 font-bold">
-          <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500 animate-bounce"></i>
-          <span>OVERHEAD COCKPIT ROOF CONSOLE // SEC-9 EMERGENCY MODULE</span>
-        </div>
-        <div class="flex items-center gap-3 text-slate-400">
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> DIRECT BEACON STANDBY</span>
-          <span class="px-2 py-0.5 rounded bg-black/60 border border-slate-700 text-slate-300">ACTUATION: SPRING MECHANICAL</span>
-        </div>
-      </div>
-
-      <!-- Center Console Housing: Hazard Hatches + The Big SOS Push Button -->
-      <div class="flex items-center justify-center gap-8 my-auto relative w-full">
-        
-        <!-- Left Warning Stenciling -->
-        <div class="hidden md:flex flex-col text-right font-mono text-[11px] text-amber-400 font-bold space-y-1">
-          <div>MIL-STD-1472G</div>
-          <div class="text-slate-400 font-normal">SATELLITE DISTRESS</div>
-          <div class="text-red-400">LOCKED FREQ: 406.025 MHz</div>
-          <div class="text-slate-500 text-[10px]">HOLD TO ENGAGE FULL SEQUENCE</div>
-        </div>
-
-        <!-- Central Armoured Switch Housing -->
-        <div class="relative flex items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-[#181e26] to-[#0d1217] border-4 border-[#333d4d] shadow-[0_15px_40px_rgba(0,0,0,0.95)]">
-          <!-- Hazard Stripe Border Trim -->
-          <div class="absolute inset-1.5 hazard-stripes opacity-20 rounded-xl pointer-events-none"></div>
-
-          <!-- Spring Loaded Guard Flap (Opened State) -->
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-t bg-amber-600 text-black font-extrabold text-[9px] font-mono tracking-wider border border-amber-400 shadow">
-            SAFETY COVER RAISED
-          </div>
-
-          <!-- The Physical Red Mushroom SOS Switch -->
-          <div class="relative z-10 flex flex-col items-center">
-            <button id="sos-physical-btn" class="sos-physical-switch w-36 h-36 rounded-full bg-gradient-to-b from-[#f87171] via-[#dc2626] to-[#991b1b] border-4 border-red-300 flex flex-col items-center justify-center text-white cursor-pointer select-none">
-              <i data-lucide="radio" class="w-9 h-9 mb-1 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"></i>
-              <span class="font-extrabold text-2xl tracking-widest font-tactical drop-shadow">SOS</span>
-              <span class="text-[9px] font-mono font-bold tracking-widest text-red-200">EMERGENCY</span>
-            </button>
-            <div class="mt-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider">PUSH TO BROADCAST DISTRESS</div>
-          </div>
-
-          <!-- SVG Soldier Hand with Glove that reaches up and pushes button -->
-          <div id="sos-operator-hand" class="absolute pointer-events-none z-30 transition-transform duration-75" style="bottom: -280px; left: 50%; transform: translateX(-50%) translateY(0px);">
-            <!-- High Quality Vector Tactical Arm & Glove Pressing -->
-            <svg width="180" height="260" viewBox="0 0 180 260" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-[0_20px_35px_rgba(0,0,0,0.9)]">
-              <!-- Forearm Sleeve (Indian Army O.D. Green Camo Sleeve) -->
-              <path d="M55,160 L125,160 L140,260 L40,260 Z" fill="#2d3b24" stroke="#1c2517" stroke-width="3"/>
-              <!-- Tactical Watch on Wrist -->
-              <rect x="52" y="150" width="76" height="14" rx="3" fill="#181e24" stroke="#374151" stroke-width="2"/>
-              <rect x="75" y="152" width="30" height="10" rx="2" fill="#0b1319"/>
-              <text x="80" y="160" fill="#00e676" font-size="7" font-family="monospace">14:32</text>
-              <!-- Glove Wrist Cuff -->
-              <path d="M50,140 L130,140 L126,152 L54,152 Z" fill="#111827" stroke="#374151" stroke-width="2"/>
-              <!-- Tactical Combat Glove Palm (Reinforced Black Kevlar) -->
-              <path d="M50,90 Q50,70 70,68 L110,68 Q130,70 130,90 L126,140 L54,140 Z" fill="#1f2937" stroke="#374151" stroke-width="3"/>
-              <!-- Glove Knuckle Armor Plate -->
-              <rect x="58" y="80" width="64" height="20" rx="6" fill="#111827" stroke="#4b5563" stroke-width="2"/>
-              <circle cx="68" cy="90" r="3.5" fill="#374151"/>
-              <circle cx="82" cy="90" r="3.5" fill="#374151"/>
-              <circle cx="98" cy="90" r="3.5" fill="#374151"/>
-              <circle cx="112" cy="90" r="3.5" fill="#374151"/>
-              <!-- Thumb pointing up/inward -->
-              <path d="M50,105 Q35,90 42,75 Q48,65 58,74 L62,95 Z" fill="#1f2937" stroke="#374151" stroke-width="2.5"/>
-              <path d="M42,75 Q45,68 52,73" stroke="#4b5563" stroke-width="2" stroke-linecap="round"/>
-              <!-- Extended Index & Middle Fingers Pressing Button -->
-              <path d="M72,70 L72,25 Q72,12 85,12 Q98,12 98,25 L98,70 Z" fill="#111827" stroke="#374151" stroke-width="3"/>
-              <path d="M98,70 L98,32 Q98,20 108,20 Q118,20 118,32 L118,72 Z" fill="#1f2937" stroke="#374151" stroke-width="2.5"/>
-              <!-- Fingertip Grip Pads -->
-              <ellipse cx="85" cy="20" rx="7" ry="9" fill="#374151"/>
-              <ellipse cx="108" cy="27" rx="5" ry="7" fill="#374151"/>
-              <!-- Pressed Feedback Touch Ring -->
-              <circle id="hand-touch-ring" cx="85" cy="12" r="14" fill="none" stroke="#ef4444" stroke-width="3" opacity="0" class="transition-opacity"/>
-            </svg>
-          </div>
-        </div>
-
-        <!-- Right System Indicators -->
-        <div class="hidden md:flex flex-col text-left font-mono text-[11px] text-slate-300 font-semibold space-y-1">
-          <div class="text-cyan-400">BEACON: EPIRB / COSPAS</div>
-          <div>POWER: DUAL REDUNDANT BUS</div>
-          <div class="text-emerald-400">GPS EPHEMERIS: LOCKED</div>
-          <div class="text-slate-500 text-[10px]">TRANSMISSION BURST: 5.0 W</div>
-        </div>
-
-      </div>
-
-      <!-- Bottom Status Strip in Overhead Console -->
-      <div class="w-full flex items-center justify-between px-4 py-1.5 bg-[#090d12] border-t border-[#1e2733] text-[11px] font-mono text-slate-400">
-        <span class="text-red-400 font-bold" id="sos-sequence-status">HOLD SPACEBAR FOR 2.0s TO ENGAGE // RELEASE TO CANCEL</span>
-        <span id="sos-sequence-countdown" class="text-yellow-400 font-mono font-bold">0.0s / 2.0s</span>
-      </div>
-
-    </div>
 
     <!-- RUGGED TABLET CHASSIS CONTAINER -->
     <div id="rugged-frame" class="w-full max-w-[1440px] rounded-[28px] chassis-surface p-3 sm:p-5 md:p-6 shadow-[0_25px_70px_rgba(0,0,0,0.95)] border-4 border-[#252e3b] relative transition-all duration-300">
@@ -199,6 +100,66 @@
 
       <!-- THE DIGITAL TACTICAL SCREEN BEZEL -->
       <div class="flex-1 bg-[#07131b] rounded-xl border-2 border-[#122b3b] shadow-[inset_0_0_20px_rgba(0,0,0,0.9)] overflow-hidden relative crt-overlay flex flex-col">
+
+        <!-- MIL-STD-1472H TACTICAL DEFENSE INTERLOCK HUD OVERLAY (Spacebar 2.0s Hold) -->
+        <div id="sos-interlock-hud" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md select-none transition-opacity duration-200 opacity-0 pointer-events-none">
+          <!-- Corner Reticles / Brackets -->
+          <div class="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-red-500/80 pointer-events-none"></div>
+          <div class="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-red-500/80 pointer-events-none"></div>
+          <div class="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-red-500/80 pointer-events-none"></div>
+          <div class="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-red-500/80 pointer-events-none"></div>
+
+          <!-- Top Tactical Classification Banner -->
+          <div class="absolute top-4 px-4 py-1.5 rounded bg-red-950/90 border border-red-600/70 text-red-300 font-mono text-[11px] tracking-widest flex items-center gap-2 shadow-lg">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            <span>MIL-STD-1472H TACTICAL DISTRESS INTERLOCK // LEVEL-1 OVERRIDE</span>
+          </div>
+
+          <!-- Center Circular Chrono-Ring HUD Reticle -->
+          <div class="relative flex flex-col items-center justify-center my-auto">
+            <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 240 240">
+                <!-- Outer Static Ticks & Reticle -->
+                <circle cx="120" cy="120" r="108" fill="none" stroke="#251216" stroke-width="4" stroke-dasharray="2, 6"/>
+                <circle cx="120" cy="120" r="96" fill="none" stroke="#451a1a" stroke-width="1.5"/>
+                <!-- Background Track -->
+                <circle cx="120" cy="120" r="84" fill="none" stroke="#1f0d0e" stroke-width="10"/>
+                <!-- Dynamic Progress Charging Ring (Circumference = 2 * PI * 84 = 527.787) -->
+                <circle id="sos-chrono-progress-ring" cx="120" cy="120" r="84" fill="none" stroke="#ef4444" stroke-width="10" stroke-dasharray="527.787" stroke-dashoffset="527.787" stroke-linecap="round" class="drop-shadow-[0_0_12px_rgba(239,68,68,0.85)]"/>
+                <!-- Inner Subtle Radar Reticle -->
+                <circle cx="120" cy="120" r="68" fill="#130507" stroke="#dc2626" stroke-width="1" stroke-opacity="0.4"/>
+              </svg>
+
+              <!-- Center Data Readout -->
+              <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                <i data-lucide="radio" class="w-8 h-8 text-red-400 mb-1 animate-pulse"></i>
+                <div id="sos-hud-countdown" class="font-mono font-black text-3xl sm:text-4xl text-white tracking-widest drop-shadow-[0_0_10px_rgba(239,68,68,0.7)]">0.00s</div>
+                <div class="text-[10px] font-mono tracking-widest text-red-300 font-bold uppercase mt-0.5">2.00s ENGAGE THRESHOLD</div>
+                <div id="sos-hud-subtext" class="text-[9px] font-mono text-slate-400 mt-1">HOLD SPACEBAR TO ENGAGE DISTRESS</div>
+              </div>
+            </div>
+
+            <!-- Telemetry Status Below Ring -->
+            <div class="mt-4 flex flex-col items-center gap-1.5 font-mono text-xs">
+              <div id="sos-hud-status-banner" class="px-4 py-1.5 rounded bg-red-950/90 border border-red-500/60 text-red-200 text-center font-bold tracking-wider">
+                SAFETY INTERLOCK CHARGING // COSPAS-SARSAT 406.025 MHz
+              </div>
+              <div class="flex items-center gap-3 sm:gap-4 text-[10px] text-slate-400">
+                <span>TRANSPONDER: <strong class="text-emerald-400">COSPAS-READY</strong></span>
+                <span>&bull;</span>
+                <span>CRYPTO KEY: <strong class="text-cyan-400">IN-DEF-09</strong></span>
+                <span>&bull;</span>
+                <span>FAILSAFE: <strong class="text-amber-400">RELEASE TO ABORT</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Abort Hint -->
+          <div class="absolute bottom-4 flex items-center gap-2 text-slate-400 font-mono text-[11px] bg-black/60 px-3 py-1 rounded border border-slate-700">
+            <kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-200 font-bold">RELEASE SPACE</kbd>
+            <span>IMMEDIATELY ABORTS DISTRESS SEQUENCE</span>
+          </div>
+        </div>
 
         <!-- TOP STATUS HEADER BAR (Indian Army Insignia, Clock, GNSS, Heading, Altitude, Weather) -->
         <header class="bg-[#050f16] border-b border-[#122e42] px-3 py-2.5 sm:px-5 flex flex-wrap items-center justify-between gap-y-2 text-xs select-none">
@@ -314,42 +275,55 @@
 
         </header>
 
+        <!-- INTEGRATED EMERGENCY COMMAND STRIP (Docked seamlessly below header in Combat Distress Mode) -->
+        <div id="sos-command-strip" class="hidden w-full bg-[#1c0606] border-b-2 border-red-600 px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs font-mono shadow-[0_4px_25px_rgba(220,38,38,0.5)] z-40 relative select-none">
+          <!-- Left: Priority Status + Transponder Freqs -->
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-red-600 text-white font-black animate-pulse">
+                <i data-lucide="radio" class="w-3.5 h-3.5"></i>
+              </span>
+              <span class="text-white font-tactical font-black tracking-widest text-sm text-red-100">COMBAT DISTRESS ACTIVE</span>
+            </div>
+            <div class="hidden lg:flex items-center gap-2 text-[11px] text-red-200/90 border-l border-red-800/80 pl-3">
+              <span>COSPAS-SARSAT: <strong class="text-white">406.025 MHz</strong></span>
+              <span>&bull;</span>
+              <span>VHF GUARD: <strong class="text-white">121.5 MHz</strong></span>
+              <span>&bull;</span>
+              <span>BURST: <strong id="sos-burst-count" class="text-amber-300">#01</strong></span>
+            </div>
+          </div>
+
+          <!-- Center: Coords & Vector Info -->
+          <div class="flex items-center gap-2 text-[11px] text-red-200">
+            <span class="text-slate-400">GRID:</span>
+            <span id="sos-alert-coords" class="text-amber-300 font-bold tracking-wider">34.2122° N, 77.5867° E</span>
+            <span class="hidden sm:inline text-slate-500">|</span>
+            <span class="hidden sm:inline text-cyan-300 font-semibold"><i data-lucide="shield-alert" class="w-3.5 h-3.5 inline mr-1"></i>NEAREST QRF: BMS-02 (1.8 KM SW)</span>
+          </div>
+
+          <!-- Right: Elapsed Timer + Silence Audio + Stand Down -->
+          <div class="flex items-center gap-2.5">
+            <div class="flex items-center gap-1.5 bg-black/50 px-2.5 py-1 rounded border border-red-900/60">
+              <span class="text-slate-400 text-[10px]">SAR ELAPSED:</span>
+              <span id="sos-alert-timer" class="text-yellow-400 font-bold font-mono text-xs">00:00</span>
+            </div>
+            <button id="sos-silence-btn" onclick="toggleEmergencyAlarmSilence()" title="Silence audible avionics alarm while retaining visual distress telemetry" class="px-2.5 py-1 rounded bg-red-950/70 hover:bg-red-900/80 text-red-200 border border-red-700/60 text-[11px] font-bold flex items-center gap-1 transition-colors">
+              <i data-lucide="volume-x" class="w-3.5 h-3.5" id="sos-silence-icon"></i>
+              <span id="sos-silence-label">SILENCE AUDIO</span>
+            </button>
+            <button onclick="dismissEmergencySos()" title="Stand down combat distress beacon and restore standard operational state" class="px-3 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-600 text-[11px] font-bold flex items-center gap-1 transition-colors">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>STAND DOWN</span>
+            </button>
+          </div>
+        </div>
+
         <!-- MAIN CONTENT CONTAINER (Switchable between Home, Map, Waypoints, Camera, Logs) -->
         <main id="tab-viewport" class="p-3 sm:p-4 flex-1 overflow-y-auto">
 
           <!-- VIEW: HOME (The 6 exact military dashboard widgets from photo) -->
           <section id="view-home" class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 h-full content-between">
-
-            <!-- EMERGENCY SOS ACTIVE DASHBOARD BANNER (Displayed when emergency is triggered) -->
-            <div id="sos-dashboard-alert-banner" class="hidden md:col-span-12 rounded-xl p-3 sm:p-4 bg-red-950/90 border-2 border-red-500 shadow-2xl relative overflow-hidden flex flex-wrap items-center justify-between gap-3 sos-banner-glow select-none">
-              <!-- Left: Siren Icon + Alarm Text -->
-              <div class="flex items-center gap-3.5">
-                <div class="w-10 h-10 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-lg animate-pulse">
-                  <i data-lucide="siren" class="w-6 h-6 text-white"></i>
-                </div>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded bg-red-600 text-white font-extrabold text-[11px] font-mono tracking-wider animate-ping">CRITICAL</span>
-                    <h3 class="font-tactical font-black text-base sm:text-lg text-white tracking-widest uppercase">EMERGENCY SOS DISTRESS BROADCAST ACTIVE</h3>
-                  </div>
-                  <p class="text-xs font-mono text-red-200 mt-0.5">
-                    TRANSMITTING HIGH-PRIORITY MILITARY MAYDAY &bull; FREQ: 406.025 MHz &bull; GRID: <span id="sos-alert-coords" class="text-yellow-300 font-bold">34.2122° N, 77.5867° E</span>
-                  </p>
-                </div>
-              </div>
-
-              <!-- Right: Distress Timer & Cancel Switch -->
-              <div class="flex items-center gap-3">
-                <div class="text-right font-mono text-xs">
-                  <div class="text-slate-300 text-[10px]">TIME ELAPSED:</div>
-                  <div id="sos-alert-timer" class="text-yellow-300 font-bold text-sm">00:01</div>
-                </div>
-                <button onclick="dismissEmergencySos()" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-red-500/60 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow">
-                  <i data-lucide="x-circle" class="w-4 h-4 text-red-400"></i>
-                  <span>STAND DOWN (CANCEL SOS)</span>
-                </button>
-              </div>
-            </div>
 
             <!-- CARD 1: VEHICLE STATUS (Col span 5 on desktop) -->
             <div class="md:col-span-5 bg-[#091924]/90 border border-[#14364c] rounded-xl p-3 sm:p-4 relative shadow-lg">
@@ -360,7 +334,7 @@
                   <span class="text-xs font-bold uppercase tracking-wider font-tactical">TACTICAL VEHICLE STATUS</span>
                 </div>
                 <!-- Operational Pill -->
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#0d3429] text-emerald-400 border border-emerald-500/40 tracking-wide">
+                <span id="vehicle-status-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#0d3429] text-emerald-400 border border-emerald-500/40 tracking-wide">
                   Operational
                 </span>
               </div>

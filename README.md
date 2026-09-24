@@ -56,10 +56,17 @@ Double-click on the rotating vehicle model to enter an expanded 360° inspection
 
 ---
 
-### 7. Overhead Cockpit Emergency SOS Console
-Holding the physical **Spacebar for 2.0 seconds** shifts the entire terminal frame upside, revealing the overhead roof console where a tactical glove presses down the spring-mechanical SOS distress button.
+### 7. MIL-STD-1472H Tactical Defense Interlock & Combat Distress Mode
+Holding the physical **Spacebar for 2.0 seconds** activates an authentic military-grade ballistic glass Tactical HUD Interlock with a 360° Circular Chrono-Ring, microsecond countdown (`0.00s` -> `2.00s`), transponder frequency synchronization (`406.025 MHz`), and cryptographic authorization keys. Releasing before 2.0s gracefully disengages the interlock (`SAFETY INTERLOCK RESTORED // DISTRESS ABORTED`).
 
-![Overhead Roof Console Emergency SOS](docs/screenshots/07_emergency_sos_console.png)
+Upon the 2.0-second commit, the terminal enters whole-system **Combat Distress Mode**:
+- **Integrated Emergency Command Strip**: Docks seamlessly beneath the top bar with COSPAS-SARSAT transponder frequencies, burst counters, live SAR elapsed clock, and nearest Quick Reaction Force vector (`BMS-02`).
+- **Tactical Vehicle Status (Card 1)**: Operational badge transitions into high-visibility `COMBAT DISTRESS` telemetry.
+- **Leaflet Map (Card 3)**: Projects a pulsating SAR beacon radar ring and tactical rescue vector polyline to nearest friendly unit.
+- **Avionics Master Caution**: Dual-tone military cockpit chime (`880 Hz -> 440 Hz`) with one-click `[SILENCE AUDIO]` and `[STAND DOWN]` controls.
+
+![Tactical Defense Interlock Charging HUD](docs/screenshots/sos_interlock_charging.png)
+![Combat Distress Active Dashboard](docs/screenshots/sos_combat_distress_active.png)
 
 ---
 
@@ -93,7 +100,7 @@ start chrome indian_army_tactical_vehicle_terminal.html
 
 | Shortcut / Gesture | Action |
 |---|---|
-| **Spacebar (Hold 2.0s)** | Shift frame upside & activate Overhead Emergency SOS |
+| **Spacebar (Hold 2.0s)** | Engage MIL-STD-1472H Tactical Distress Interlock & Combat Distress Mode |
 | **Double Click (on 3D Model)** | Expand to 360° Full-Frame Vehicle Inspection View |
 | **Left Click + Drag (3D)** | Rotate vehicle model 360° in orbit |
 | **Scroll Wheel (3D / Map)** | Zoom camera in and out |
